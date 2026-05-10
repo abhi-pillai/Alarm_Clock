@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.MainController"
+      alignment="CENTER"
+      spacing="20"
+      style="-fx-padding: 30;">
+
+    <Label text="⏰ Alarm Clock"
+           style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+
+    <Label text="00:00:00"
+           fx:id="clockLabel"
+           style="-fx-font-size: 48px; -fx-font-family: monospace;"/>
+
+</VBox>
