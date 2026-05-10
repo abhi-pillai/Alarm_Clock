@@ -3,12 +3,25 @@
  */
 package org.example;
 
-public class App {
-    public String getGreeting() {
-        return "Hello World!";
+import javafx.application.Application;
+import javafx.scene.Parent;
+import javafx.stage.Stage;
+
+public class App extends Application {
+
+    @Override
+    public void start(Stage stage) throws Exception{
+        var fxml = getClass().getResource("/org/example/main.fxml");
+        var root = javafx.fxml.FXMLLoader.load(fxml);
+
+        var scene = new javafx.scene.Scene((Parent) root,400,500);
+        stage.setTitle("Alarm Clock");
+        stage.setScene(scene);
+        stage.show();
+
     }
 
     public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+        launch(args);
     }
 }
