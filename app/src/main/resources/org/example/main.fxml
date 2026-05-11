@@ -1,18 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.*?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="org.example.MainController"
-      alignment="CENTER"
-      spacing="20"
-      style="-fx-padding: 30;">
+      spacing="16"
+      style="-fx-padding: 24; -fx-min-width: 400;">
 
-    <Label text="⏰ Alarm Clock"
-           style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+    <!-- Live clock display -->
+    <Label fx:id="clockLabel"
+           text="00:00:00"
+           style="-fx-font-size: 48px; -fx-font-family: monospace;
+                  -fx-alignment: center; -fx-max-width: infinity;"/>
 
-    <Label text="00:00:00"
-           fx:id="clockLabel"
-           style="-fx-font-size: 48px; -fx-font-family: monospace;"/>
+    <Separator/>
+
+    <!-- Add alarm row -->
+    <HBox spacing="8" alignment="CENTER_LEFT">
+
+        <!-- Time picker — lets user pick HH:MM -->
+        <TextField fx:id="timeField"
+                   promptText="HH:MM"
+                   prefWidth="80"
+                   style="-fx-font-family: monospace;"/>
+
+        <!-- Optional label -->
+        <TextField fx:id="labelField"
+                   promptText="Label (optional)"
+                   HBox.hgrow="ALWAYS"/>
+
+        <Button text="Add Alarm"
+                onAction="#handleAddAlarm"/>
+    </HBox>
+
+    <!-- Alarm list -->
+    <ListView fx:id="alarmListView" prefHeight="220">
+    <placeholder>
+        <Label text="No alarms set yet"/>
+    </placeholder>
+</ListView>
+
+    <!-- Delete selected alarm -->
+    <Button text="Delete Selected"
+            onAction="#handleDeleteAlarm"
+            style="-fx-max-width: infinity;"/>
 
 </VBox>
