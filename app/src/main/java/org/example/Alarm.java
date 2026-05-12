@@ -5,8 +5,8 @@ import java.time.format.DateTimeFormatter;
 
 public class Alarm {
 
-    private final LocalTime time;   // The alarm time e.g. 07:30
-    private final String label;     // Optional label e.g. "Wake up"
+    private final LocalTime time;   
+    private final String label;     
 
     private static final DateTimeFormatter DISPLAY_FORMAT =
             DateTimeFormatter.ofPattern("HH:mm");
