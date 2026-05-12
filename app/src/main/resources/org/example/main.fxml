@@ -8,7 +8,6 @@
       spacing="16"
       style="-fx-padding: 24; -fx-min-width: 400;">
 
-    <!-- Live clock display -->
     <Label fx:id="clockLabel"
            text="00:00:00"
            style="-fx-font-size: 48px; -fx-font-family: monospace;
@@ -16,34 +15,31 @@
 
     <Separator/>
 
-    <!-- Add alarm row -->
     <HBox spacing="8" alignment="CENTER_LEFT">
-
-        <!-- Time picker — lets user pick HH:MM -->
         <TextField fx:id="timeField"
                    promptText="HH:MM"
                    prefWidth="80"
                    style="-fx-font-family: monospace;"/>
-
-        <!-- Optional label -->
         <TextField fx:id="labelField"
                    promptText="Label (optional)"
                    HBox.hgrow="ALWAYS"/>
-
-        <Button text="Add Alarm"
-                onAction="#handleAddAlarm"/>
+        <Button text="Add Alarm" onAction="#handleAddAlarm"/>
     </HBox>
 
-    <!-- Alarm list -->
     <ListView fx:id="alarmListView" prefHeight="220">
-    <placeholder>
-        <Label text="No alarms set yet"/>
-    </placeholder>
-</ListView>
+        <placeholder>
+            <Label text="No alarms set yet"/>
+        </placeholder>
+    </ListView>
 
-    <!-- Delete selected alarm -->
     <Button text="Delete Selected"
             onAction="#handleDeleteAlarm"
             style="-fx-max-width: infinity;"/>
+
+    <!-- Shows which alarm just fired -->
+    <Label fx:id="statusLabel"
+           text=""
+           style="-fx-font-size: 13px; -fx-text-fill: gray;
+                  -fx-alignment: center; -fx-max-width: infinity;"/>
 
 </VBox>
