@@ -5,7 +5,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.stage.Stage;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -17,11 +16,11 @@ import java.util.concurrent.TimeUnit;
 
 public class MainController {
 
-    @FXML private Label      clockLabel;
-    @FXML private TextField  timeField;
-    @FXML private TextField  labelField;
+    @FXML private Label           clockLabel;
+    @FXML private TextField       timeField;
+    @FXML private TextField       labelField;
     @FXML private ListView<Alarm> alarmListView;
-    @FXML private Label      statusLabel;
+    @FXML private Label           statusLabel;
 
     private static final DateTimeFormatter TIME_FORMAT =
             DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -34,13 +33,17 @@ public class MainController {
 
     @FXML
     public void initialize() {
-        alarmListView.setItems(alarms);
+        // 1. Load saved alarms from disk on startup
+        alarms.addAll(PersistenceManager.load());
 
-        // Pass the alarm list and our trigger handler to AlarmManager
+        alarmListView.setItems(alarms);
         alarmManager = new AlarmManager(alarms, this::onAlarmTriggered);
         alarmManager.start();
-
         startClock();
+
+        // 2. Auto-save whenever the alarm list changes
+        alarms.addListener((javafx.collections.ListChangeListener<Alarm>) change ->
+                PersistenceManager.save(alarms));
     }
 
     private void startClock() {
@@ -55,13 +58,14 @@ public class MainController {
         }, 0, 1, TimeUnit.SECONDS);
     }
 
-    // Called by AlarmManager when an alarm fires
     private void onAlarmTriggered(Alarm alarm) {
+        // 3. Play sound the moment the alarm fires
+        SoundEngine.playAlarm();
+
         statusLabel.setText("Alarm fired: " + alarm);
 
-        // Show a dialog with Snooze and Dismiss options
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("⏰ Alarm!");
+        alert.setTitle("Alarm!");
         alert.setHeaderText(alarm.getLabel().isBlank()
                 ? "Alarm at " + alarm.getTime()
                 : alarm.getLabel());
@@ -70,11 +74,9 @@ public class MainController {
         ButtonType snoozeBtn  = new ButtonType("Snooze 5 min");
         ButtonType dismissBtn = new ButtonType("Dismiss",
                 ButtonBar.ButtonData.CANCEL_CLOSE);
-
         alert.getButtonTypes().setAll(snoozeBtn, dismissBtn);
 
         Optional<ButtonType> result = alert.showAndWait();
-
         if (result.isPresent() && result.get() == snoozeBtn) {
             alarmManager.snooze(alarm);
             statusLabel.setText("Snoozed for 5 minutes");
