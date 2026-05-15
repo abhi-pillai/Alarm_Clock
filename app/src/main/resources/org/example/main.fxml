@@ -6,12 +6,12 @@
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="org.example.MainController"
       spacing="16"
-      style="-fx-padding: 24; -fx-min-width: 400;">
+      styleClass="root-container"
+      stylesheets="@style.css">
 
     <Label fx:id="clockLabel"
            text="00:00:00"
-           style="-fx-font-size: 48px; -fx-font-family: monospace;
-                  -fx-alignment: center; -fx-max-width: infinity;"/>
+           styleClass="clock-label"/>
 
     <Separator/>
 
@@ -19,27 +19,25 @@
         <TextField fx:id="timeField"
                    promptText="HH:MM"
                    prefWidth="80"
-                   style="-fx-font-family: monospace;"/>
+                   styleClass="time-field"/>
         <TextField fx:id="labelField"
                    promptText="Label (optional)"
                    HBox.hgrow="ALWAYS"/>
-        <Button text="Add Alarm" onAction="#handleAddAlarm"/>
+        <CheckBox  fx:id="repeatCheck" text="Daily"/>
+        <Button    text="Add" onAction="#handleAddAlarm"
+                   styleClass="add-button"/>
     </HBox>
 
-    <ListView fx:id="alarmListView" prefHeight="220">
+    <ListView fx:id="alarmListView" prefHeight="200" styleClass="alarm-list">
         <placeholder>
-            <Label text="No alarms set yet"/>
+            <Label text="No alarms set yet" styleClass="placeholder-label"/>
         </placeholder>
     </ListView>
 
     <Button text="Delete Selected"
             onAction="#handleDeleteAlarm"
-            style="-fx-max-width: infinity;"/>
+            styleClass="delete-button"/>
 
-    <!-- Shows which alarm just fired -->
-    <Label fx:id="statusLabel"
-           text=""
-           style="-fx-font-size: 13px; -fx-text-fill: gray;
-                  -fx-alignment: center; -fx-max-width: infinity;"/>
+    <Label fx:id="statusLabel" text="" styleClass="status-label"/>
 
 </VBox>
