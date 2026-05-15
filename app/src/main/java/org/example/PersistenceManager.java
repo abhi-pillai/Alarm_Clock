@@ -8,20 +8,18 @@ import java.util.List;
 
 public class PersistenceManager {
 
-    // Saves to the user's home directory — works on Windows, Mac, Linux
     private static final Path SAVE_FILE = Paths.get(
             System.getProperty("user.home"), ".alarmclock", "alarms.txt");
 
-    // Each alarm is saved as one line: "HH:mm|Label"
-    // Example: "07:30|Wake up"
+    // Format: "07:30|Wake up|true"
     public static void save(List<Alarm> alarms) {
         try {
-            // Create the directory if it doesn't exist yet
             Files.createDirectories(SAVE_FILE.getParent());
-
             try (BufferedWriter writer = Files.newBufferedWriter(SAVE_FILE)) {
                 for (Alarm alarm : alarms) {
-                    writer.write(alarm.getTime() + "|" + alarm.getLabel());
+                    writer.write(alarm.getTime() + "|"
+                               + alarm.getLabel() + "|"
+                               + alarm.isRepeat());
                     writer.newLine();
                 }
             }
@@ -30,11 +28,9 @@ public class PersistenceManager {
         }
     }
 
-    // Reads the file and reconstructs Alarm objects
     public static List<Alarm> load() {
         List<Alarm> alarms = new ArrayList<>();
-
-        if (!Files.exists(SAVE_FILE)) return alarms; // First run — no file yet
+        if (!Files.exists(SAVE_FILE)) return alarms;
 
         try (BufferedReader reader = Files.newBufferedReader(SAVE_FILE)) {
             String line;
@@ -42,12 +38,13 @@ public class PersistenceManager {
                 line = line.trim();
                 if (line.isBlank()) continue;
 
-                String[] parts = line.split("\\|", 2); // Split on | into max 2 parts
-                if (parts.length < 2) continue;        // Skip malformed lines
+                String[] parts = line.split("\\|", 3); // Now 3 parts
+                if (parts.length < 3) continue;
 
-                LocalTime time  = LocalTime.parse(parts[0]);
-                String label    = parts[1];
-                alarms.add(new Alarm(time, label));
+                LocalTime time   = LocalTime.parse(parts[0]);
+                String    label  = parts[1];
+                boolean   repeat = Boolean.parseBoolean(parts[2]);
+                alarms.add(new Alarm(time, label, repeat));
             }
         } catch (IOException e) {
             System.err.println("Failed to load alarms: " + e.getMessage());
