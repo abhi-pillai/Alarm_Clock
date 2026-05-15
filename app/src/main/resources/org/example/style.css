@@ -1,0 +1,81 @@
+/* Overall window */
+.root-container {
+    -fx-padding: 24;
+    -fx-background-color: #1e1e2e;
+    -fx-min-width: 420;
+}
+
+/* Big clock display */
+.clock-label {
+    -fx-font-size: 52px;
+    -fx-font-family: monospace;
+    -fx-text-fill: #cdd6f4;
+    -fx-alignment: center;
+    -fx-max-width: infinity;
+}
+
+/* Time input field */
+.time-field {
+    -fx-font-family: monospace;
+    -fx-font-size: 14px;
+}
+
+/* Add button */
+.add-button {
+    -fx-background-color: #89b4fa;
+    -fx-text-fill: #1e1e2e;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.add-button:hover {
+    -fx-background-color: #b4d0fa;
+}
+
+/* Alarm list */
+.alarm-list {
+    -fx-background-color: #313244;
+    -fx-background-radius: 8;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 8;
+}
+
+.alarm-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #cdd6f4;
+    -fx-font-size: 14px;
+    -fx-padding: 8 12;
+}
+
+.alarm-list .list-cell:selected {
+    -fx-background-color: #45475a;
+}
+
+/* Delete button */
+.delete-button {
+    -fx-background-color: #f38ba8;
+    -fx-text-fill: #1e1e2e;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-max-width: infinity;
+    -fx-cursor: hand;
+}
+
+.delete-button:hover {
+    -fx-background-color: #f5a0b8;
+}
+
+/* Placeholder text */
+.placeholder-label {
+    -fx-text-fill: #6c7086;
+    -fx-font-style: italic;
+}
+
+/* Status bar */
+.status-label {
+    -fx-text-fill: #a6e3a1;
+    -fx-font-size: 12px;
+    -fx-alignment: center;
+    -fx-max-width: infinity;
+}
