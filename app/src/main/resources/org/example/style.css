@@ -14,10 +14,35 @@
     -fx-max-width: infinity;
 }
 
-/* Time input field */
-.time-field {
+/* Spinner styling */
+.time-spinner {
     -fx-font-family: monospace;
-    -fx-font-size: 14px;
+    -fx-font-size: 16px;
+}
+
+.time-spinner .text-field {
+    -fx-alignment: center;
+    -fx-text-fill: #cdd6f4;
+    -fx-background-color: #313244;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.time-spinner .increment-arrow-button,
+.time-spinner .decrement-arrow-button {
+    -fx-background-color: #45475a;
+    -fx-cursor: hand;
+}
+
+.time-spinner .increment-arrow-button:hover,
+.time-spinner .decrement-arrow-button:hover {
+    -fx-background-color: #585b70;
+}
+
+.time-spinner .increment-arrow,
+.time-spinner .decrement-arrow {
+    -fx-background-color: #cdd6f4;
 }
 
 /* Add button */
