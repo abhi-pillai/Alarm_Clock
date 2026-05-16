@@ -8,7 +8,6 @@ import javafx.scene.control.*;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -16,12 +15,13 @@ import java.util.concurrent.TimeUnit;
 
 public class MainController {
 
-    @FXML private Label           clockLabel;
-    @FXML private TextField       timeField;
-    @FXML private TextField       labelField;
-    @FXML private CheckBox        repeatCheck;
-    @FXML private ListView<Alarm> alarmListView;
-    @FXML private Label           statusLabel;
+    @FXML private Label               clockLabel;
+    @FXML private Spinner<Integer>    hourSpinner;
+    @FXML private Spinner<Integer>    minuteSpinner;
+    @FXML private TextField           labelField;
+    @FXML private CheckBox            repeatCheck;
+    @FXML private ListView<Alarm>     alarmListView;
+    @FXML private Label               statusLabel;
 
     private static final DateTimeFormatter TIME_FORMAT =
             DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -34,6 +34,34 @@ public class MainController {
 
     @FXML
     public void initialize() {
+        // Make the spinners wrap around:
+        // 23 → 0 and 0 → 23 for hours; 59 → 0 for minutes
+        hourSpinner.setValueFactory(
+            new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 7) {
+                @Override public void increment(int steps) {
+                    setValue((getValue() + steps) % 24);
+                }
+                @Override public void decrement(int steps) {
+                    setValue((getValue() - steps + 24) % 24);
+                }
+            }
+        );
+
+        minuteSpinner.setValueFactory(
+            new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 30) {
+                @Override public void increment(int steps) {
+                    setValue((getValue() + steps) % 60);
+                }
+                @Override public void decrement(int steps) {
+                    setValue((getValue() - steps + 60) % 60);
+                }
+            }
+        );
+
+        // Format display as two digits: "07" not "7"
+        hourSpinner.getValueFactory().setConverter(new TwoDigitConverter(24));
+        minuteSpinner.getValueFactory().setConverter(new TwoDigitConverter(60));
+
         alarms.addAll(PersistenceManager.load());
         alarmListView.setItems(alarms);
 
@@ -57,7 +85,6 @@ public class MainController {
         }, 0, 1, TimeUnit.SECONDS);
     }
 
-    // Called by App.java on window close — cleans up threads
     public void shutdown() {
         if (clockScheduler != null) clockScheduler.shutdownNow();
         if (alarmManager   != null) alarmManager.stop();
@@ -90,24 +117,20 @@ public class MainController {
 
     @FXML
     private void handleAddAlarm() {
-        String  timeInput  = timeField.getText().trim();
-        String  labelInput = labelField.getText().trim();
-        boolean isRepeat   = repeatCheck.isSelected();
+        // Commit any manually typed value before reading
+        hourSpinner.commitValue();
+        minuteSpinner.commitValue();
 
-        try {
-            LocalTime alarmTime = LocalTime.parse(timeInput,
-                    DateTimeFormatter.ofPattern("HH:mm"));
-            alarms.add(new Alarm(alarmTime, labelInput, isRepeat));
-            timeField.clear();
-            labelField.clear();
-            repeatCheck.setSelected(false);
-        } catch (DateTimeParseException e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Invalid time");
-            alert.setHeaderText(null);
-            alert.setContentText("Please enter time in HH:MM format, e.g. 07:30");
-            alert.showAndWait();
-        }
+        int     hour      = hourSpinner.getValue();
+        int     minute    = minuteSpinner.getValue();
+        String  labelInput = labelField.getText().trim();
+        boolean isRepeat  = repeatCheck.isSelected();
+
+        LocalTime alarmTime = LocalTime.of(hour, minute);
+        alarms.add(new Alarm(alarmTime, labelInput, isRepeat));
+
+        labelField.clear();
+        repeatCheck.setSelected(false);
     }
 
     @FXML
