@@ -16,16 +16,34 @@
     <Separator/>
 
     <HBox spacing="8" alignment="CENTER_LEFT">
-        <TextField fx:id="timeField"
-                   promptText="HH:MM"
-                   prefWidth="80"
-                   styleClass="time-field"/>
+
+        <!-- Hour spinner: 0 to 23 -->
+        <Spinner fx:id="hourSpinner"
+                 min="0" max="23" initialValue="7"
+                 editable="true"
+                 prefWidth="70"
+                 styleClass="time-spinner"/>
+
+        <Label text=":"
+               style="-fx-font-size: 20px; -fx-font-weight: bold;
+                      -fx-text-fill: #cdd6f4;"/>
+
+        <!-- Minute spinner: 0 to 59 -->
+        <Spinner fx:id="minuteSpinner"
+                 min="0" max="59" initialValue="30"
+                 editable="true"
+                 prefWidth="70"
+                 styleClass="time-spinner"/>
+
         <TextField fx:id="labelField"
                    promptText="Label (optional)"
                    HBox.hgrow="ALWAYS"/>
-        <CheckBox  fx:id="repeatCheck" text="Daily"/>
-        <Button    text="Add" onAction="#handleAddAlarm"
-                   styleClass="add-button"/>
+
+        <CheckBox fx:id="repeatCheck" text="Daily"
+                  style="-fx-text-fill: #cdd6f4;"/>
+
+        <Button text="Add" onAction="#handleAddAlarm"
+                styleClass="add-button"/>
     </HBox>
 
     <ListView fx:id="alarmListView" prefHeight="200" styleClass="alarm-list">
