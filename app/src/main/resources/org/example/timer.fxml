@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.TimerController"
+      alignment="CENTER"
+      spacing="20"
+      styleClass="tab-content">
+
+    <!-- Countdown display -->
+    <Label fx:id="timerLabel"
+           text="00:05:00"
+           styleClass="clock-label"/>
+
+    <!-- +/- minute buttons + start/pause -->
+    <HBox spacing="12" alignment="CENTER">
+        <Button text="− 1m"  onAction="#handleMinusMin"
+                styleClass="timer-adj-button"/>
+        <Button text="− 10s" onAction="#handleMinusSec"
+                styleClass="timer-adj-button"/>
+        <Button fx:id="startPauseBtn"
+                text="Start"
+                onAction="#handleStartPause"
+                styleClass="add-button"
+                prefWidth="90"/>
+        <Button text="+ 10s" onAction="#handlePlusSec"
+                styleClass="timer-adj-button"/>
+        <Button text="+ 1m"  onAction="#handlePlusMin"
+                styleClass="timer-adj-button"/>
+    </HBox>
+
+    <Button text="Reset" onAction="#handleReset"
+            styleClass="delete-button"
+            prefWidth="120"/>
+
+    <Label fx:id="timerStatusLabel" text=""
+           styleClass="status-label"/>
+
+</VBox>
