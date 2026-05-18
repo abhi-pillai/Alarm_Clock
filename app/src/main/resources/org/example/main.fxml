@@ -1,61 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.control.*?>
+<?import javafx.fxml.FXMLLoader?>
 
-<VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="org.example.MainController"
-      spacing="16"
-      styleClass="root-container"
-      stylesheets="@style.css">
+<TabPane xmlns:fx="http://javafx.com/fxml"
+         fx:controller="org.example.MainController"
+         stylesheets="@style.css"
+         tabClosingPolicy="UNAVAILABLE"
+         styleClass="root-tab-pane">
 
-    <Label fx:id="clockLabel"
-           text="00:00:00"
-           styleClass="clock-label"/>
+    <tabs>
+        <Tab text="🕐  Clock">
+            <content>
+                <fx:include source="clock.fxml"/>
+            </content>
+        </Tab>
+        <Tab text="⏰  Alarm">
+            <content>
+                <fx:include source="alarm.fxml"/>
+            </content>
+        </Tab>
+        <Tab text="⏱  Timer">
+            <content>
+                <fx:include source="timer.fxml"/>
+            </content>
+        </Tab>
+    </tabs>
 
-    <Separator/>
-
-    <HBox spacing="8" alignment="CENTER_LEFT">
-
-        <!-- Hour spinner: 0 to 23 -->
-        <Spinner fx:id="hourSpinner"
-                 min="0" max="23" initialValue="7"
-                 editable="true"
-                 prefWidth="70"
-                 styleClass="time-spinner"/>
-
-        <Label text=":"
-               style="-fx-font-size: 20px; -fx-font-weight: bold;
-                      -fx-text-fill: #cdd6f4;"/>
-
-        <!-- Minute spinner: 0 to 59 -->
-        <Spinner fx:id="minuteSpinner"
-                 min="0" max="59" initialValue="30"
-                 editable="true"
-                 prefWidth="70"
-                 styleClass="time-spinner"/>
-
-        <TextField fx:id="labelField"
-                   promptText="Label (optional)"
-                   HBox.hgrow="ALWAYS"/>
-
-        <CheckBox fx:id="repeatCheck" text="Daily"
-                  style="-fx-text-fill: #cdd6f4;"/>
-
-        <Button text="Add" onAction="#handleAddAlarm"
-                styleClass="add-button"/>
-    </HBox>
-
-    <ListView fx:id="alarmListView" prefHeight="200" styleClass="alarm-list">
-        <placeholder>
-            <Label text="No alarms set yet" styleClass="placeholder-label"/>
-        </placeholder>
-    </ListView>
-
-    <Button text="Delete Selected"
-            onAction="#handleDeleteAlarm"
-            styleClass="delete-button"/>
-
-    <Label fx:id="statusLabel" text="" styleClass="status-label"/>
-
-</VBox>
+</TabPane>
