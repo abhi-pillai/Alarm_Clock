@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.AlarmController"
+      spacing="14"
+      styleClass="tab-content">
+
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Spinner fx:id="hourSpinner"
+                 min="0" max="23" initialValue="7"
+                 editable="true" prefWidth="70"
+                 styleClass="time-spinner"/>
+
+        <Label text=":"
+               styleClass="colon-label"/>
+
+        <Spinner fx:id="minuteSpinner"
+                 min="0" max="59" initialValue="30"
+                 editable="true" prefWidth="70"
+                 styleClass="time-spinner"/>
+
+        <TextField fx:id="labelField"
+                   promptText="Label (optional)"
+                   HBox.hgrow="ALWAYS"/>
+
+        <CheckBox fx:id="repeatCheck" text="Daily"
+                  styleClass="repeat-check"/>
+
+        <Button text="Add" onAction="#handleAddAlarm"
+                styleClass="add-button"/>
+    </HBox>
+
+    <ListView fx:id="alarmListView" prefHeight="220"
+              styleClass="alarm-list">
+        <placeholder>
+            <Label text="No alarms set yet"
+                   styleClass="placeholder-label"/>
+        </placeholder>
+    </ListView>
+
+    <Button text="Delete Selected"
+            onAction="#handleDeleteAlarm"
+            styleClass="delete-button"/>
+
+    <Label fx:id="statusLabel" text=""
+           styleClass="status-label"/>
+
+</VBox>
