@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.ClockController"
+      alignment="CENTER"
+      spacing="12"
+      styleClass="tab-content">
+
+    <Label fx:id="dateLabel"
+           text="Monday, 18 May"
+           styleClass="date-label"/>
+
+    <Label fx:id="clockLabel"
+           text="00:00:00"
+           styleClass="clock-label"/>
+
+    <Label fx:id="tzLabel"
+           text=""
+           styleClass="tz-label"/>
+
+</VBox>
