@@ -1,20 +1,64 @@
-/* Overall window */
-.root-container {
-    -fx-padding: 24;
+.root-tab-pane {
+    -fx-background-color: #1e1e2e;
+}
+
+.root-tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: #181825;
+}
+
+.root-tab-pane .tab {
+    -fx-background-color: #181825;
+    -fx-padding: 8 20;
+}
+
+.root-tab-pane .tab:selected {
+    -fx-background-color: #1e1e2e;
+}
+
+.root-tab-pane .tab .tab-label {
+    -fx-text-fill: #6c7086;
+    -fx-font-size: 13px;
+}
+
+.root-tab-pane .tab:selected .tab-label {
+    -fx-text-fill: #89b4fa;
+    -fx-font-weight: bold;
+}
+
+.tab-content {
+    -fx-padding: 28;
     -fx-background-color: #1e1e2e;
     -fx-min-width: 420;
 }
 
-/* Big clock display */
 .clock-label {
-    -fx-font-size: 52px;
+    -fx-font-size: 56px;
     -fx-font-family: monospace;
     -fx-text-fill: #cdd6f4;
     -fx-alignment: center;
     -fx-max-width: infinity;
 }
 
-/* Spinner styling */
+.date-label {
+    -fx-font-size: 16px;
+    -fx-text-fill: #a6adc8;
+    -fx-alignment: center;
+    -fx-max-width: infinity;
+}
+
+.tz-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6c7086;
+    -fx-alignment: center;
+    -fx-max-width: infinity;
+}
+
+.colon-label {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #cdd6f4;
+}
+
 .time-spinner {
     -fx-font-family: monospace;
     -fx-font-size: 16px;
@@ -45,7 +89,10 @@
     -fx-background-color: #cdd6f4;
 }
 
-/* Add button */
+.repeat-check {
+    -fx-text-fill: #cdd6f4;
+}
+
 .add-button {
     -fx-background-color: #89b4fa;
     -fx-text-fill: #1e1e2e;
@@ -58,7 +105,17 @@
     -fx-background-color: #b4d0fa;
 }
 
-/* Alarm list */
+.timer-adj-button {
+    -fx-background-color: #313244;
+    -fx-text-fill: #cdd6f4;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.timer-adj-button:hover {
+    -fx-background-color: #45475a;
+}
+
 .alarm-list {
     -fx-background-color: #313244;
     -fx-background-radius: 8;
@@ -77,7 +134,6 @@
     -fx-background-color: #45475a;
 }
 
-/* Delete button */
 .delete-button {
     -fx-background-color: #f38ba8;
     -fx-text-fill: #1e1e2e;
@@ -91,13 +147,11 @@
     -fx-background-color: #f5a0b8;
 }
 
-/* Placeholder text */
 .placeholder-label {
     -fx-text-fill: #6c7086;
     -fx-font-style: italic;
 }
 
-/* Status bar */
 .status-label {
     -fx-text-fill: #a6e3a1;
     -fx-font-size: 12px;
