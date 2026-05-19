@@ -11,12 +11,9 @@ public class App extends Application {
     public void start(Stage stage) throws Exception {
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/org/example/main.fxml"));
-        Scene scene = new Scene(loader.load(), 420, 520);
+        Scene scene = new Scene(loader.load(), 480, 540);
 
-        // Grab the controller so we can call shutdown() on close
         MainController controller = loader.getController();
-
-        // Clean up background threads when window is closed
         stage.setOnCloseRequest(e -> controller.shutdown());
 
         stage.setTitle("Alarm Clock");
