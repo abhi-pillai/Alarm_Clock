@@ -158,3 +158,27 @@
     -fx-alignment: center;
     -fx-max-width: infinity;
 }
+
+.digital-label {
+    -fx-font-size: 32px;
+    -fx-font-family: monospace;
+    -fx-text-fill: #cdd6f4;
+    -fx-alignment: center;
+    -fx-max-width: infinity;
+}
+
+.format-toggle {
+    -fx-background-color: #313244;
+    -fx-text-fill: #cdd6f4;
+    -fx-background-radius: 20;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 20;
+    -fx-cursor: hand;
+    -fx-padding: 6 20;
+}
+
+.format-toggle:selected {
+    -fx-background-color: #89b4fa;
+    -fx-text-fill: #1e1e2e;
+    -fx-border-color: #89b4fa;
+}
