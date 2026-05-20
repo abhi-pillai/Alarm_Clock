@@ -1,23 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.canvas.Canvas?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="org.example.ClockController"
       alignment="CENTER"
-      spacing="12"
+      spacing="16"
       styleClass="tab-content">
 
+    <!-- Analog clock face drawn on a Canvas -->
+    <Canvas fx:id="clockCanvas" width="300" height="300"/>
+
+    <!-- Digital time display -->
+    <Label fx:id="digitalLabel"
+           text="12:00:00 AM"
+           styleClass="digital-label"/>
+
+    <!-- Date and timezone -->
     <Label fx:id="dateLabel"
            text="Monday, 18 May"
            styleClass="date-label"/>
 
-    <Label fx:id="clockLabel"
-           text="00:00:00"
-           styleClass="clock-label"/>
-
     <Label fx:id="tzLabel"
            text=""
            styleClass="tz-label"/>
+
+    <!-- Format toggle -->
+    <ToggleButton fx:id="formatToggle"
+                  text="Switch to 24hr"
+                  onAction="#handleFormatToggle"
+                  styleClass="format-toggle"/>
 
 </VBox>
