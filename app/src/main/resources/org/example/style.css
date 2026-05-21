@@ -182,3 +182,189 @@
     -fx-text-fill: #1e1e2e;
     -fx-border-color: #89b4fa;
 }
+
+/* ── Alarm picker root ── */
+.alarm-root {
+    -fx-background-color: #1e1e2e;
+}
+
+/* ── Picker card ── */
+.picker-card {
+    -fx-background-color: #ede7f6;
+    -fx-padding: 20;
+    -fx-background-radius: 16;
+    -fx-margin: 16;
+}
+
+.picker-heading {
+    -fx-font-size: 13px;
+    -fx-text-fill: #5b4a7a;
+}
+
+/* ── Digital time display ── */
+.time-display {
+    -fx-font-size: 52px;
+    -fx-font-family: monospace;
+    -fx-font-weight: bold;
+    -fx-text-fill: #7c6fa0;
+    -fx-background-color: #ddd6f3;
+    -fx-background-radius: 10;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+    -fx-min-width: 100;
+    -fx-alignment: center;
+}
+
+.time-display-active {
+    -fx-text-fill: #3d2a7a;
+    -fx-background-color: #c5b8f0;
+}
+
+.time-colon {
+    -fx-font-size: 52px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #7c6fa0;
+}
+
+/* ── AM/PM group ── */
+.ampm-group {
+    -fx-background-color: #ddd6f3;
+    -fx-background-radius: 8;
+    -fx-border-color: #b8a9e0;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.ampm-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #7c6fa0;
+    -fx-font-size: 13px;
+    -fx-padding: 6 20;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+}
+
+.ampm-btn:selected {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #3d2a7a;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+}
+
+/* ── Drum (scroll) picker ── */
+.drum-box {
+    -fx-background-color: #ede7f6;
+    -fx-padding: 8;
+}
+
+.drum-list {
+    -fx-background-color: #ede7f6;
+    -fx-border-color: transparent;
+    -fx-font-size: 28px;
+    -fx-font-family: monospace;
+    -fx-font-weight: bold;
+    -fx-fixed-cell-size: 52;
+}
+
+.drum-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #b8a9e0;
+    -fx-alignment: center;
+    -fx-padding: 4 0;
+}
+
+.drum-list .list-cell:selected {
+    -fx-background-color: #ddd6f3;
+    -fx-text-fill: #3d2a7a;
+    -fx-background-radius: 8;
+}
+
+/* ── Mode toggle button ── */
+.mode-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #7c6fa0;
+    -fx-font-size: 18px;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-padding: 4 8;
+}
+
+.mode-btn:hover {
+    -fx-background-color: #ddd6f3;
+    -fx-background-radius: 8;
+}
+
+/* ── Options card ── */
+.options-card {
+    -fx-background-color: #1e1e2e;
+    -fx-padding: 0 16;
+}
+
+.option-row {
+    -fx-padding: 14 4;
+}
+
+.option-label {
+    -fx-font-size: 15px;
+    -fx-text-fill: #cdd6f4;
+}
+
+.option-hint {
+    -fx-font-size: 13px;
+    -fx-text-fill: #7c6fa0;
+}
+
+.option-sep {
+    -fx-background-color: #313244;
+}
+
+.label-field {
+    -fx-background-color: #313244;
+    -fx-text-fill: #cdd6f4;
+    -fx-border-color: transparent;
+    -fx-background-radius: 6;
+    -fx-padding: 6 10;
+}
+
+/* ── iOS-style snooze toggle ── */
+.ios-toggle {
+    -fx-background-color: #45475a;
+    -fx-background-radius: 20;
+    -fx-min-width: 52;
+    -fx-min-height: 28;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-text-fill: transparent;
+}
+
+.ios-toggle-on {
+    -fx-background-color: #7c3aed;
+}
+
+/* ── Action row ── */
+.action-row {
+    -fx-padding: 12 16;
+    -fx-background-color: #1e1e2e;
+}
+
+.action-cancel {
+    -fx-background-color: transparent;
+    -fx-text-fill: #7c3aed;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+
+.action-ok {
+    -fx-background-color: transparent;
+    -fx-text-fill: #7c3aed;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+
+.action-ok:hover, .action-cancel:hover {
+    -fx-text-fill: #a78bfa;
+}
