@@ -368,3 +368,79 @@
 .action-ok:hover, .action-cancel:hover {
     -fx-text-fill: #a78bfa;
 }
+
+/* ── Sound panel ── */
+.sound-panel {
+    -fx-background-color: #ede7f6;
+    -fx-padding: 0 16 12 16;
+}
+
+.tune-list {
+    -fx-background-color: #ede7f6;
+    -fx-border-color: #ddd6f3;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.tune-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #5b4a7a;
+    -fx-font-size: 13px;
+    -fx-padding: 8 12;
+}
+
+.tune-list .list-cell:selected {
+    -fx-background-color: #ddd6f3;
+    -fx-text-fill: #3d2a7a;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+}
+
+.sound-actions {
+    -fx-padding: 10 0 0 0;
+}
+
+.add-tune-btn {
+    -fx-background-color: #7c3aed;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-padding: 8 0;
+}
+
+.add-tune-btn:hover {
+    -fx-background-color: #6d28d9;
+}
+
+.preview-btn {
+    -fx-background-color: #ede7f6;
+    -fx-text-fill: #7c6fa0;
+    -fx-font-size: 13px;
+    -fx-border-color: #b8a9e0;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-padding: 8 14;
+}
+
+.remove-tune-btn {
+    -fx-background-color: #ede7f6;
+    -fx-text-fill: #e06c75;
+    -fx-font-size: 13px;
+    -fx-border-color: #f5a0b8;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-padding: 8 14;
+}
+
+.option-chevron {
+    -fx-background-color: transparent;
+    -fx-text-fill: #7c6fa0;
+    -fx-border-color: transparent;
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+    -fx-padding: 0 4;
+}
