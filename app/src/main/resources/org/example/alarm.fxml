@@ -75,34 +75,65 @@
 
     </VBox>
 
-    <!-- ── MIDDLE: Repeat / Label / Snooze options ── -->
     <VBox styleClass="options-card" spacing="0">
 
-        <!-- Repeat row -->
-        <HBox styleClass="option-row" alignment="CENTER_LEFT">
-            <Label text="Repeat" styleClass="option-label" HBox.hgrow="ALWAYS"/>
-            <CheckBox fx:id="repeatCheck" styleClass="repeat-check"/>
-            <Label text="Daily" styleClass="option-hint"/>
-        </HBox>
-        <Separator styleClass="option-sep"/>
+    <!-- Repeat row -->
+    <HBox styleClass="option-row" alignment="CENTER_LEFT">
+        <Label text="Repeat" styleClass="option-label" HBox.hgrow="ALWAYS"/>
+        <CheckBox fx:id="repeatCheck" styleClass="repeat-check"/>
+        <Label text="Daily" styleClass="option-hint"/>
+    </HBox>
+    <Separator styleClass="option-sep"/>
 
-        <!-- Label row -->
-        <HBox styleClass="option-row" alignment="CENTER_LEFT" spacing="8">
-            <Label text="Label" styleClass="option-label"/>
-            <TextField fx:id="labelField" promptText="Alarm label"
-                       HBox.hgrow="ALWAYS" styleClass="label-field"/>
-        </HBox>
-        <Separator styleClass="option-sep"/>
+    <!-- Label row -->
+    <HBox styleClass="option-row" alignment="CENTER_LEFT" spacing="8">
+        <Label text="Label" styleClass="option-label"/>
+        <TextField fx:id="labelField" promptText="Alarm label"
+                   HBox.hgrow="ALWAYS" styleClass="label-field"/>
+    </HBox>
+    <Separator styleClass="option-sep"/>
 
-        <!-- Snooze row -->
-        <HBox styleClass="option-row" alignment="CENTER_LEFT">
-            <Label text="Snooze" styleClass="option-label" HBox.hgrow="ALWAYS"/>
-            <ToggleButton fx:id="snoozeToggle"
-                          styleClass="ios-toggle"
-                          onAction="#handleSnoozeToggle"/>
-        </HBox>
+    <!-- Sound row — shows selected tune name -->
+    <HBox styleClass="option-row" alignment="CENTER_LEFT">
+        <Label text="Sound" styleClass="option-label" HBox.hgrow="ALWAYS"/>
+        <Label fx:id="selectedTuneLabel" text="Default beep"
+               styleClass="option-hint"/>
+        <Button text=" ›" onAction="#handleOpenSoundPicker"
+                styleClass="option-chevron"/>
+    </HBox>
+    <Separator styleClass="option-sep"/>
 
-    </VBox>
+    <!-- Snooze row -->
+    <HBox styleClass="option-row" alignment="CENTER_LEFT">
+        <Label text="Snooze" styleClass="option-label" HBox.hgrow="ALWAYS"/>
+        <ToggleButton fx:id="snoozeToggle"
+                      styleClass="ios-toggle"
+                      onAction="#handleSnoozeToggle"/>
+    </HBox>
+
+</VBox>
+
+<!-- Sound picker panel (hidden until Sound row is tapped) -->
+<VBox fx:id="soundPickerPanel" styleClass="sound-panel"
+      visible="false" managed="false" spacing="0">
+
+    <ListView fx:id="tuneListView" prefHeight="160"
+              styleClass="tune-list"/>
+
+    <HBox spacing="10" styleClass="sound-actions">
+        <Button text="+ Add tune"
+                onAction="#handleAddTune"
+                styleClass="add-tune-btn"
+                HBox.hgrow="ALWAYS"/>
+        <Button text="▶ Preview"
+                onAction="#handlePreviewTune"
+                styleClass="preview-btn"/>
+        <Button text="Remove"
+                onAction="#handleRemoveTune"
+                styleClass="remove-tune-btn"/>
+    </HBox>
+
+</VBox>
 
     <!-- ── BOTTOM: Alarm list + Cancel/OK ── -->
     <HBox styleClass="action-row" alignment="CENTER_RIGHT" spacing="16">
