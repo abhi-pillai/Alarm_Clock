@@ -1,51 +1,130 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.shape.*?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="org.example.AlarmController"
-      spacing="14"
-      styleClass="tab-content">
+      spacing="0"
+      styleClass="alarm-root">
 
-    <HBox spacing="8" alignment="CENTER_LEFT">
-        <Spinner fx:id="hourSpinner"
-                 min="0" max="23" initialValue="7"
-                 editable="true" prefWidth="70"
-                 styleClass="time-spinner"/>
+    <!-- ── TOP: Time picker card ── -->
+    <VBox styleClass="picker-card" spacing="16">
 
-        <Label text=":"
-               styleClass="colon-label"/>
+        <Label text="Select time" styleClass="picker-heading"/>
 
-        <Spinner fx:id="minuteSpinner"
-                 min="0" max="59" initialValue="30"
-                 editable="true" prefWidth="70"
-                 styleClass="time-spinner"/>
+        <HBox spacing="16">
 
-        <TextField fx:id="labelField"
-                   promptText="Label (optional)"
-                   HBox.hgrow="ALWAYS"/>
+            <!-- Left: digital display + AM/PM -->
+            <VBox spacing="10" alignment="CENTER">
 
-        <CheckBox fx:id="repeatCheck" text="Daily"
-                  styleClass="repeat-check"/>
+                <!-- HH : MM display -->
+              <HBox spacing="8" alignment="CENTER">
+              <Label fx:id="hourDisplay"  text="01"
+                     styleClass="time-display time-display-active"
+                     onMouseClicked="#handleHourClick"/>
+              <Label text=":" styleClass="time-colon"/>
+              <Label fx:id="minuteDisplay" text="00"
+                     styleClass="time-display"
+                     onMouseClicked="#handleMinuteClick"/>
+              </HBox>
 
-        <Button text="Add" onAction="#handleAddAlarm"
-                styleClass="add-button"/>
+                <!-- AM / PM toggle -->
+                <HBox styleClass="ampm-group" spacing="0">
+                    <ToggleButton fx:id="amBtn"  text="AM"
+                                  styleClass="ampm-btn"
+                                  onAction="#handleAmPm"/>
+                    <ToggleButton fx:id="pmBtn"  text="PM"
+                                  styleClass="ampm-btn"
+                                  onAction="#handleAmPm"/>
+                </HBox>
+
+            </VBox>
+
+            <!-- Right: clock face OR scroll drum (toggled) -->
+            <StackPane fx:id="pickerStack" HBox.hgrow="ALWAYS"
+                       minWidth="220" minHeight="220">
+
+                <!-- Clock face canvas -->
+                <Canvas fx:id="dialCanvas" width="210" height="210"
+                        onMousePressed="#handleDialPress"
+                        onMouseDragged="#handleDialDrag"/>
+
+                <!-- Scroll drum (hidden by default) -->
+                <HBox fx:id="drumBox" spacing="4"
+                      alignment="CENTER" visible="false" managed="false"
+                      styleClass="drum-box">
+                    <ListView fx:id="hourDrum"   prefWidth="100"
+                              styleClass="drum-list"/>
+                    <ListView fx:id="minuteDrum" prefWidth="100"
+                              styleClass="drum-list"/>
+                </HBox>
+
+            </StackPane>
+
+        </HBox>
+
+        <!-- Mode toggle (keyboard icon = drum, clock icon = dial) -->
+        <HBox alignment="BOTTOM_LEFT">
+            <Button fx:id="modeToggleBtn"
+                    text="⌨"
+                    onAction="#handleModeToggle"
+                    styleClass="mode-btn"/>
+        </HBox>
+
+    </VBox>
+
+    <!-- ── MIDDLE: Repeat / Label / Snooze options ── -->
+    <VBox styleClass="options-card" spacing="0">
+
+        <!-- Repeat row -->
+        <HBox styleClass="option-row" alignment="CENTER_LEFT">
+            <Label text="Repeat" styleClass="option-label" HBox.hgrow="ALWAYS"/>
+            <CheckBox fx:id="repeatCheck" styleClass="repeat-check"/>
+            <Label text="Daily" styleClass="option-hint"/>
+        </HBox>
+        <Separator styleClass="option-sep"/>
+
+        <!-- Label row -->
+        <HBox styleClass="option-row" alignment="CENTER_LEFT" spacing="8">
+            <Label text="Label" styleClass="option-label"/>
+            <TextField fx:id="labelField" promptText="Alarm label"
+                       HBox.hgrow="ALWAYS" styleClass="label-field"/>
+        </HBox>
+        <Separator styleClass="option-sep"/>
+
+        <!-- Snooze row -->
+        <HBox styleClass="option-row" alignment="CENTER_LEFT">
+            <Label text="Snooze" styleClass="option-label" HBox.hgrow="ALWAYS"/>
+            <ToggleButton fx:id="snoozeToggle"
+                          styleClass="ios-toggle"
+                          onAction="#handleSnoozeToggle"/>
+        </HBox>
+
+    </VBox>
+
+    <!-- ── BOTTOM: Alarm list + Cancel/OK ── -->
+    <HBox styleClass="action-row" alignment="CENTER_RIGHT" spacing="16">
+        <Button text="Cancel" onAction="#handleCancel"
+                styleClass="action-cancel"/>
+        <Button text="OK"     onAction="#handleOk"
+                styleClass="action-ok"/>
     </HBox>
 
-    <ListView fx:id="alarmListView" prefHeight="220"
+    <!-- Saved alarms list -->
+    <ListView fx:id="alarmListView" prefHeight="160"
               styleClass="alarm-list">
         <placeholder>
-            <Label text="No alarms set yet"
-                   styleClass="placeholder-label"/>
+            <Label text="No alarms set yet" styleClass="placeholder-label"/>
         </placeholder>
     </ListView>
 
-    <Button text="Delete Selected"
-            onAction="#handleDeleteAlarm"
-            styleClass="delete-button"/>
+    <HBox styleClass="action-row" alignment="CENTER_RIGHT">
+        <Button text="Delete Selected" onAction="#handleDeleteAlarm"
+                styleClass="delete-button"/>
+    </HBox>
 
-    <Label fx:id="statusLabel" text=""
-           styleClass="status-label"/>
+    <Label fx:id="statusLabel" text="" styleClass="status-label"/>
 
 </VBox>
