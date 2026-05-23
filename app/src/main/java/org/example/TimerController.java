@@ -58,7 +58,7 @@ public class TimerController {
                     running = false;
                     startPauseBtn.setText("Start");
                     timerStatusLabel.setText("Time's up!");
-                    SoundEngine.playAlarm();
+                    SoundEngine.play(null);
                 });
                 tickFuture.cancel(false);
             }
