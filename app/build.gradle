@@ -12,7 +12,9 @@ repositories {
 }
 
 dependencies {
-    // JUnit 5 for testing
+    // MP3 playback support via JLayer
+    implementation 'javazoom:jlayer:1.0.1'
+
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
