@@ -264,6 +264,7 @@ public class AlarmController {
         alert.getButtonTypes().setAll(snoozeBtn, dismissBtn);
 
         Optional<ButtonType> result = alert.showAndWait();
+        SoundEngine.stopCurrent();
         if (result.isPresent() && result.get() == snoozeBtn) {
             alarmManager.snooze(alarm);
             statusLabel.setText("Snoozed for 5 minutes");
