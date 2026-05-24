@@ -444,3 +444,10 @@
     -fx-cursor: hand;
     -fx-padding: 0 4;
 }
+
+.timer-sound-card {
+    -fx-background-color: #313244;
+    -fx-background-radius: 12;
+    -fx-padding: 0;
+    -fx-max-width: 380;
+}
