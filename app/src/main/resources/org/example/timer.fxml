@@ -14,7 +14,7 @@
            text="00:05:00"
            styleClass="clock-label"/>
 
-    <!-- +/- minute buttons + start/pause -->
+    <!-- +/- adjustment buttons + start/pause -->
     <HBox spacing="12" alignment="CENTER">
         <Button text="− 1m"  onAction="#handleMinusMin"
                 styleClass="timer-adj-button"/>
@@ -34,6 +34,42 @@
     <Button text="Reset" onAction="#handleReset"
             styleClass="delete-button"
             prefWidth="120"/>
+
+    <!-- Sound row -->
+    <VBox styleClass="timer-sound-card" spacing="0">
+
+        <HBox styleClass="option-row" alignment="CENTER_LEFT">
+            <Label text="Sound" styleClass="option-label"
+                   HBox.hgrow="ALWAYS"/>
+            <Label fx:id="selectedTuneLabel" text="Default beep"
+                   styleClass="option-hint"/>
+            <Button text=" ›" onAction="#handleOpenSoundPicker"
+                    styleClass="option-chevron"/>
+        </HBox>
+
+        <!-- Sound picker panel (hidden until Sound row tapped) -->
+        <VBox fx:id="soundPickerPanel" styleClass="sound-panel"
+              visible="false" managed="false" spacing="0">
+
+            <ListView fx:id="tuneListView" prefHeight="150"
+                      styleClass="tune-list"/>
+
+            <HBox spacing="10" styleClass="sound-actions">
+                <Button text="+ Add tune"
+                        onAction="#handleAddTune"
+                        styleClass="add-tune-btn"
+                        HBox.hgrow="ALWAYS"/>
+                <Button text="▶ Preview"
+                        onAction="#handlePreviewTune"
+                        styleClass="preview-btn"/>
+                <Button text="Remove"
+                        onAction="#handleRemoveTune"
+                        styleClass="remove-tune-btn"/>
+            </HBox>
+
+        </VBox>
+
+    </VBox>
 
     <Label fx:id="timerStatusLabel" text=""
            styleClass="status-label"/>
