@@ -12,8 +12,10 @@ repositories {
 }
 
 dependencies {
-    // MP3 playback support via JLayer
-    implementation 'javazoom:jlayer:1.0.1'
+    implementation 'com.googlecode.soundlibs:mp3spi:1.9.5.4'   // MP3 → Java Sound bridge
+    implementation 'com.googlecode.soundlibs:tritonus-share:0.3.7.4' // required by mp3spi
+    implementation 'com.googlecode.soundlibs:jlayer:1.0.1.4'   // MP3 decoder engine
+
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
