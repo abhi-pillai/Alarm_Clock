@@ -1,22 +1,16 @@
 package org.example;
 
-import javafx.application.Platform;
-import javafx.scene.control.Alert;
-
 import javax.sound.sampled.*;
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SoundEngine {
 
-    // Tracks the active clip (for file playback) so we can stop it instantly
-    private static final AtomicReference<Clip> activeClip =
-            new AtomicReference<>(null);
-
-    // Tracks the active line (for beep playback) so we can stop it instantly
+    // SourceDataLine works for both file and beep playback
     private static final AtomicReference<SourceDataLine> activeLine =
             new AtomicReference<>(null);
+
+    private static volatile boolean stopRequested = false;
 
     // ─── Public API ──────────────────────────────────────────────────
 
@@ -29,13 +23,8 @@ public class SoundEngine {
         }
     }
 
-    // Stop whatever is currently playing — called on dismiss/snooze/reset
     public static void stopCurrent() {
-        Clip clip = activeClip.getAndSet(null);
-        if (clip != null) {
-            clip.stop();
-            clip.close();
-        }
+        stopRequested = true;
 
         SourceDataLine line = activeLine.getAndSet(null);
         if (line != null) {
@@ -52,13 +41,12 @@ public class SoundEngine {
             File file = new File(absolutePath);
 
             if (!file.exists()) {
-                System.err.println("Audio file not found: " + absolutePath);
+                System.err.println("File not found: " + absolutePath);
                 playBeepSync();
                 return;
             }
 
             String name = file.getName().toLowerCase();
-
             try {
                 if (name.endsWith(".wav")) {
                     playWav(file);
@@ -73,21 +61,16 @@ public class SoundEngine {
                 e.printStackTrace();
                 playBeepSync();
             }
-
         }, "sound-file-thread");
 
         t.setDaemon(true);
         t.start();
     }
 
-    // ─── WAV playback ────────────────────────────────────────────────
-
     private static void playWav(File file) throws Exception {
         try (AudioInputStream raw = AudioSystem.getAudioInputStream(file)) {
-
             AudioFormat baseFormat = raw.getFormat();
 
-            // Convert to PCM_SIGNED if needed (some WAVs are PCM_UNSIGNED etc.)
             AudioFormat pcmFormat = new AudioFormat(
                     AudioFormat.Encoding.PCM_SIGNED,
                     baseFormat.getSampleRate(),
@@ -98,75 +81,85 @@ public class SoundEngine {
                     false
             );
 
-            AudioInputStream pcmStream = AudioSystem.isConversionSupported(
-                    pcmFormat, baseFormat)
+            AudioInputStream pcmStream =
+                    AudioSystem.isConversionSupported(pcmFormat, baseFormat)
                     ? AudioSystem.getAudioInputStream(pcmFormat, raw)
-                    : raw; // already PCM — use as-is
+                    : raw;
 
-            playStream(pcmStream,
-                    pcmStream.getFormat().equals(baseFormat)
-                            ? baseFormat : pcmFormat);
+            streamAudio(pcmStream, pcmStream.getFormat());
         }
     }
 
-    // ─── MP3 playback (requires mp3spi + tritonus-share on classpath) ──
-
     private static void playMp3(File file) throws Exception {
-        // Step 1: open raw MP3 stream
-        // mp3spi registers itself as an AudioSystem SPI provider,
-        // so AudioSystem.getAudioInputStream() handles MP3 automatically
+        // Step 1: open raw MP3 stream via mp3spi SPI
         AudioInputStream mp3Stream =
                 AudioSystem.getAudioInputStream(file);
 
         AudioFormat mp3Format = mp3Stream.getFormat();
+        System.out.println("MP3 source format: " + mp3Format);
 
-        // Step 2: decode MP3 → PCM_SIGNED (what the sound card understands)
+        // Step 2: decode to PCM_SIGNED
         AudioFormat pcmFormat = new AudioFormat(
                 AudioFormat.Encoding.PCM_SIGNED,
-                mp3Format.getSampleRate(),  // e.g. 44100.0
-                16,                          // 16-bit samples
-                mp3Format.getChannels(),     // stereo = 2
-                mp3Format.getChannels() * 2, // frame size
                 mp3Format.getSampleRate(),
-                false                        // little-endian
+                16,
+                mp3Format.getChannels(),
+                mp3Format.getChannels() * 2,
+                mp3Format.getSampleRate(),
+                false
         );
 
         AudioInputStream pcmStream =
                 AudioSystem.getAudioInputStream(pcmFormat, mp3Stream);
 
-        playStream(pcmStream, pcmFormat);
+        System.out.println("MP3 decoded format: " + pcmStream.getFormat());
+        streamAudio(pcmStream, pcmFormat);
     }
 
-    // ─── Shared stream → Clip player ────────────────────────────────
+    // ─── Core streaming method — uses SourceDataLine (not Clip) ──────
+    // Streams audio in 4KB chunks so frame length -1 is never a problem
 
-    private static void playStream(AudioInputStream stream,
-                                    AudioFormat format) throws Exception {
-        DataLine.Info info = new DataLine.Info(Clip.class, format);
+    private static void streamAudio(AudioInputStream stream,
+                                     AudioFormat format) throws Exception {
+        DataLine.Info info =
+                new DataLine.Info(SourceDataLine.class, format);
 
         if (!AudioSystem.isLineSupported(info)) {
-            System.err.println("Audio line not supported for format: " + format);
+            System.err.println("Line not supported: " + format);
             playBeepSync();
             return;
         }
 
-        Clip clip = (Clip) AudioSystem.getLine(info);
-        clip.open(stream);
+        SourceDataLine line =
+                (SourceDataLine) AudioSystem.getLine(info);
+        line.open(format, 4096 * 4); // 4KB buffer
+        activeLine.set(line);
 
-        // Register before starting so stopCurrent() can reach it
-        activeClip.set(clip);
-        clip.start();
+        stopRequested = false;
+        line.start();
 
-        System.out.println("Playing: " + format);
+        byte[] buffer = new byte[4096];
+        int    bytesRead;
 
-        // Block until done or stopped externally
-        while (clip.isRunning() && activeClip.get() != null) {
-            Thread.sleep(100);
+        // Stream in chunks until done or stop is requested
+        while (!stopRequested &&
+               (bytesRead = stream.read(buffer, 0, buffer.length)) != -1) {
+            line.write(buffer, 0, bytesRead);
         }
 
-        // Clean up only if not already closed by stopCurrent()
-        if (activeClip.compareAndSet(clip, null)) {
-            clip.close();
+        // Flush remaining audio in the buffer before closing
+        if (!stopRequested) {
+            line.drain();
         }
+
+        // Clean up only if not already stopped externally
+        if (activeLine.compareAndSet(line, null)) {
+            line.stop();
+            line.close();
+        }
+
+        stream.close();
+        System.out.println("Playback complete.");
     }
 
     // ─── Generated beep ──────────────────────────────────────────────
@@ -186,16 +179,20 @@ public class SoundEngine {
                     (SourceDataLine) AudioSystem.getLine(info);
             line.open(format);
             activeLine.set(line);
+
+            stopRequested = false;
             line.start();
 
             for (int beep = 0; beep < 3; beep++) {
-                if (activeLine.get() == null) return;
+                if (stopRequested) break;
                 writeTone(line, 880, 400);
                 writeSilence(line, 200);
             }
 
-            line.drain();
+            if (!stopRequested) line.drain();
+
             if (activeLine.compareAndSet(line, null)) {
+                line.stop();
                 line.close();
             }
 
