@@ -79,6 +79,12 @@ public class AlarmController {
         // ── Tune list setup ──
         tunes.setAll(TuneManager.loadAll());
         tuneListView.setItems(tunes);
+        // Wire list click → selectTune()
+        tuneListView.getSelectionModel()
+            .selectedItemProperty()
+            .addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) selectTune(newVal);
+            });
         tuneListView.getSelectionModel().selectFirst(); // default beep selected
         selectedTune = tunes.get(0);
 
