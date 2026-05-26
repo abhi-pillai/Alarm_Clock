@@ -49,6 +49,11 @@ public class TimerController {
         // ── Tune list — shared with Alarm tab via same tunes.txt file ──
         tunes.setAll(TuneManager.loadAll());
         tuneListView.setItems(tunes);
+        tuneListView.getSelectionModel()
+            .selectedItemProperty()
+            .addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) selectTune(newVal);
+            });
         tuneListView.getSelectionModel().selectFirst();
         selectedTune = tunes.isEmpty() ? null : tunes.get(0);
 
