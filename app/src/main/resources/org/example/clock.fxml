@@ -1,35 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.canvas.Canvas?>
+<?import javafx.geometry.Insets?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="org.example.ClockController"
       alignment="CENTER"
-      spacing="16"
+      spacing="12"
       styleClass="tab-content">
 
-    <!-- Analog clock face drawn on a Canvas -->
-    <Canvas fx:id="clockCanvas" width="300" height="300"/>
-
-    <!-- Digital time display -->
+    <!-- Digital time -->
     <Label fx:id="digitalLabel"
-           text="12:00:00 AM"
-           styleClass="digital-label"/>
+           text="10:24 AM"
+           styleClass="clock-label"/>
 
     <!-- Date and timezone -->
     <Label fx:id="dateLabel"
-           text="Monday, 18 May"
+           text="Wednesday, 27 May"
            styleClass="date-label"/>
 
     <Label fx:id="tzLabel"
-           text=""
+           text="IST · UTC+5:30"
            styleClass="tz-label"/>
 
-    <!-- Format toggle -->
-    <ToggleButton fx:id="formatToggle"
-                  text="Switch to 24hr"
-                  onAction="#handleFormatToggle"
-                  styleClass="format-toggle"/>
+    <!-- Analog clock face -->
+    <Canvas fx:id="clockCanvas" width="220" height="220"/>
+
+    <!-- 12hr / 24hr pill toggle -->
+    <HBox alignment="CENTER" spacing="0">
+        <ToggleButton fx:id="formatToggle"
+                      text="Switch to 24hr"
+                      onAction="#handleFormatToggle"
+                      styleClass="format-toggle"/>
+    </HBox>
 
 </VBox>
