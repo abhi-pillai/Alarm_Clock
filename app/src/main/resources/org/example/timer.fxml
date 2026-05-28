@@ -2,59 +2,58 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.canvas.Canvas?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="org.example.TimerController"
       alignment="CENTER"
-      spacing="20"
+      spacing="16"
       styleClass="tab-content">
 
-    <!-- Countdown display -->
-    <Label fx:id="timerLabel"
-           text="00:05:00"
-           styleClass="clock-label"/>
+    <!-- Progress ring with time inside -->
+    <Canvas fx:id="progressCanvas" width="200" height="200"/>
 
-    <!-- +/- adjustment buttons + start/pause -->
-    <HBox spacing="12" alignment="CENTER">
+    <!-- Adjustment buttons -->
+    <HBox spacing="8" alignment="CENTER">
         <Button text="− 1m"  onAction="#handleMinusMin"
                 styleClass="timer-adj-button"/>
         <Button text="− 10s" onAction="#handleMinusSec"
                 styleClass="timer-adj-button"/>
-        <Button fx:id="startPauseBtn"
-                text="Start"
-                onAction="#handleStartPause"
-                styleClass="add-button"
-                prefWidth="90"/>
         <Button text="+ 10s" onAction="#handlePlusSec"
                 styleClass="timer-adj-button"/>
         <Button text="+ 1m"  onAction="#handlePlusMin"
                 styleClass="timer-adj-button"/>
     </HBox>
 
-    <Button text="Reset" onAction="#handleReset"
-            styleClass="delete-button"
-            prefWidth="120"/>
+    <!-- Start/Pause and Reset -->
+    <HBox spacing="12" alignment="CENTER">
+        <Button fx:id="startPauseBtn"
+                text="Start"
+                onAction="#handleStartPause"
+                styleClass="add-button"
+                prefWidth="120"/>
+        <Button text="Reset"
+                onAction="#handleReset"
+                styleClass="delete-button"
+                prefWidth="100"/>
+    </HBox>
 
     <!-- Sound row -->
     <VBox styleClass="timer-sound-card" spacing="0">
-
         <HBox styleClass="option-row" alignment="CENTER_LEFT">
             <Label text="Sound" styleClass="option-label"
                    HBox.hgrow="ALWAYS"/>
             <Label fx:id="selectedTuneLabel" text="Default beep"
                    styleClass="option-hint"/>
-            <Button text=" ›" onAction="#handleOpenSoundPicker"
+            <Button text="›" onAction="#handleOpenSoundPicker"
                     styleClass="option-chevron"/>
         </HBox>
 
-        <!-- Sound picker panel (hidden until Sound row tapped) -->
         <VBox fx:id="soundPickerPanel" styleClass="sound-panel"
               visible="false" managed="false" spacing="0">
-
-            <ListView fx:id="tuneListView" prefHeight="150"
+            <ListView fx:id="tuneListView" prefHeight="140"
                       styleClass="tune-list"/>
-
-            <HBox spacing="10" styleClass="sound-actions">
+            <HBox spacing="8" styleClass="sound-actions">
                 <Button text="+ Add tune"
                         onAction="#handleAddTune"
                         styleClass="add-tune-btn"
@@ -66,9 +65,7 @@
                         onAction="#handleRemoveTune"
                         styleClass="remove-tune-btn"/>
             </HBox>
-
         </VBox>
-
     </VBox>
 
     <Label fx:id="timerStatusLabel" text=""
