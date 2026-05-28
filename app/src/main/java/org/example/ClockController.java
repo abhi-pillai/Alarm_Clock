@@ -50,16 +50,18 @@ public class ClockController {
     private void tick() {
         ZonedDateTime now = ZonedDateTime.now();
 
-        // Update digital label
-        digitalLabel.setText(now.format(use24hr ? FMT_24 : FMT_12));
-        dateLabel.setText(now.format(DATE_FMT));
-        tzLabel.setText(
-            now.getZone().getDisplayName(
+        // Show time in clock-label, date and tz separately
+        String time = now.format(use24hr ? FMT_24 : FMT_12);
+        String date = now.format(DATE_FMT);
+        String tz   = now.getZone().getDisplayName(
                 java.time.format.TextStyle.SHORT,
                 java.util.Locale.getDefault())
-            + "  ·  UTC" + now.getOffset());
+                + "  ·  UTC" + now.getOffset();
 
-        // Draw the analog face
+        digitalLabel.setText(time);
+        dateLabel.setText(date);
+        tzLabel.setText(tz);
+
         drawClock(now);
     }
 
@@ -84,7 +86,7 @@ public class ClockController {
         gc.clearRect(0, 0, w, h);
 
         // 2. Outer bezel (dark ring)
-        gc.setFill(Color.web("#313244"));
+        gc.setFill(Color.web("#e8f4f1"));
         gc.fillOval(cx - r - 8, cy - r - 8, (r + 8) * 2, (r + 8) * 2);
 
         // 3. Clock face (white circle)
@@ -113,12 +115,12 @@ public class ClockController {
         double secondAngle = Math.toRadians(second / 60.0 * 360 - 90);
 
         // 7. Draw hands (longest = minute, medium = hour, thin red = second)
-        drawHand(gc, cx, cy, hourAngle,   r * 0.55, 7, Color.web("#313244"));
-        drawHand(gc, cx, cy, minuteAngle, r * 0.80, 5, Color.web("#313244"));
-        drawHand(gc, cx, cy, secondAngle, r * 0.85, 2, Color.web("#e06c75"));
+        drawHand(gc, cx, cy, hourAngle,   r * 0.55, 7, Color.web("#1a1a18"));
+        drawHand(gc, cx, cy, minuteAngle, r * 0.80, 5, Color.web("#1a1a18"));
+        drawHand(gc, cx, cy, secondAngle, r * 0.85, 2, Color.web("#4a7c6f"));
 
         // 8. Center dot (covers hand pivot)
-        gc.setFill(Color.web("#e06c75"));
+        gc.setFill(Color.web("#4a7c6f"));
         gc.fillOval(cx - 7, cy - 7, 14, 14);
         gc.setFill(Color.web("#ffffff"));
         gc.fillOval(cx - 3, cy - 3, 6, 6);
@@ -137,14 +139,14 @@ public class ClockController {
             double x2 = cx + outerR * Math.cos(angle);
             double y2 = cy + outerR * Math.sin(angle);
 
-            gc.setStroke(Color.web(isMajor ? "#313244" : "#9399b2"));
+            gc.setStroke(Color.web(isMajor ? "#4a7c6f" : "#c2d8d3"));
             gc.setLineWidth(isMajor ? 2.5 : 1.0);
             gc.strokeLine(x1, y1, x2, y2);
         }
     }
 
     private void drawNumbers(GraphicsContext gc, double cx, double cy, double r) {
-        gc.setFill(Color.web("#313244"));
+        gc.setFill(Color.web("#5a5a55")); 
         gc.setTextAlign(TextAlignment.CENTER);
 
         // Scale font with clock size
