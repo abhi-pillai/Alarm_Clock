@@ -66,12 +66,15 @@ public class AlarmManager {
     }
 
     public void snooze(Alarm original) {
-        LocalTime snoozeTime  = LocalTime.now().plusMinutes(5);
-        // Snoozed alarms are always one-time
-        Alarm snoozeAlarm     = new Alarm(snoozeTime,
-                                    "Snoozed: " + original.getLabel(), false);
-        Platform.runLater(() -> alarms.add(snoozeAlarm));
-    }
+    LocalTime snoozeTime = LocalTime.now().plusMinutes(5);
+    Alarm snoozeAlarm    = new Alarm(
+            snoozeTime,
+            "Snoozed: " + original.getLabel(),
+            false,
+            original.getTuneId()  // inherit the same tune as the original
+    );
+    Platform.runLater(() -> alarms.add(snoozeAlarm));
+}
 
     public void stop() {
         if (scheduler != null) scheduler.shutdownNow();
