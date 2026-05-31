@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.SoundPickerController"
+      spacing="0"
+      stylesheets="@style.css"
+      styleClass="sp-root"
+      minWidth="340" maxWidth="340">
+
+    <!-- Header -->
+    <HBox styleClass="sp-header" alignment="CENTER_LEFT" spacing="10">
+        <Label text="Choose sound" styleClass="sp-title"/>
+    </HBox>
+
+    <!-- Tune list -->
+    <ListView fx:id="tuneListView"
+              prefHeight="260"
+              styleClass="sp-tune-list"/>
+
+    <!-- Preview status -->
+    <Label fx:id="previewStatusLabel"
+           text=""
+           styleClass="sp-status"/>
+
+    <!-- Action buttons -->
+    <VBox styleClass="sp-actions" spacing="8">
+
+        <HBox spacing="8">
+            <Button text="▶  Preview"
+                    onAction="#handlePreview"
+                    styleClass="sp-preview-btn"
+                    HBox.hgrow="ALWAYS"
+                    maxWidth="Infinity"/>
+            <Button text="■  Stop"
+                    onAction="#handleStopPreview"
+                    styleClass="sp-stop-btn"
+                    HBox.hgrow="ALWAYS"
+                    maxWidth="Infinity"/>
+        </HBox>
+
+        <HBox spacing="8">
+            <Button text="+ Add tune"
+                    onAction="#handleAddTune"
+                    styleClass="sp-add-btn"
+                    HBox.hgrow="ALWAYS"
+                    maxWidth="Infinity"/>
+            <Button fx:id="removeBtn"
+                    text="Remove"
+                    onAction="#handleRemove"
+                    styleClass="sp-remove-btn"
+                    HBox.hgrow="ALWAYS"
+                    maxWidth="Infinity"/>
+        </HBox>
+
+        <Button text="Done"
+                onAction="#handleDone"
+                styleClass="sp-done-btn"
+                maxWidth="Infinity"/>
+
+    </VBox>
+
+</VBox>
