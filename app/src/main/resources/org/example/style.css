@@ -613,3 +613,162 @@
 .repeat-check:selected .mark {
     -fx-background-color: white;
 }
+
+/* ═══════════════════════════════════════════
+   SOUND PICKER POPUP
+═══════════════════════════════════════════ */
+.sp-root {
+    -fx-background-color: -surface;
+    -fx-padding: 0;
+}
+
+.sp-header {
+    -fx-background-color: -card;
+    -fx-padding: 18px 20px 16px 20px;
+    -fx-border-color: transparent transparent -border transparent;
+    -fx-border-width: 0 0 0.5px 0;
+}
+
+.sp-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-primary;
+}
+
+.sp-tune-list {
+    -fx-background-color: -card;
+    -fx-border-color: transparent;
+    -fx-padding: 6px 8px;
+}
+
+.sp-tune-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-primary;
+    -fx-font-size: 14px;
+    -fx-padding: 11px 12px;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+}
+
+.sp-tune-list .list-cell:hover {
+    -fx-background-color: -sage-muted;
+}
+
+.sp-tune-list .list-cell:selected {
+    -fx-background-color: -sage-muted;
+    -fx-text-fill: -sage;
+    -fx-font-weight: bold;
+}
+
+.sp-status {
+    -fx-font-size: 11px;
+    -fx-text-fill: -sage;
+    -fx-padding: 6px 20px 2px 20px;
+    -fx-min-height: 22px;
+}
+
+.sp-actions {
+    -fx-padding: 12px 16px 20px 16px;
+    -fx-background-color: -surface;
+    -fx-border-color: -border transparent transparent transparent;
+    -fx-border-width: 0.5px 0 0 0;
+}
+
+.sp-preview-btn {
+    -fx-background-color: -sage-muted;
+    -fx-text-fill: -sage;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10px;
+    -fx-border-color: -sage-border;
+    -fx-border-radius: 10px;
+    -fx-border-width: 0.5px;
+    -fx-cursor: hand;
+    -fx-padding: 9px 0;
+}
+
+.sp-preview-btn:hover {
+    -fx-background-color: -sage-border;
+}
+
+.sp-stop-btn {
+    -fx-background-color: -surface;
+    -fx-text-fill: -text-secondary;
+    -fx-font-size: 13px;
+    -fx-background-radius: 10px;
+    -fx-border-color: -border;
+    -fx-border-radius: 10px;
+    -fx-border-width: 0.5px;
+    -fx-cursor: hand;
+    -fx-padding: 9px 0;
+}
+
+.sp-stop-btn:hover {
+    -fx-background-color: -card;
+}
+
+.sp-add-btn {
+    -fx-background-color: -sage;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-padding: 9px 0;
+}
+
+.sp-add-btn:hover {
+    -fx-background-color: -sage-light;
+}
+
+.sp-remove-btn {
+    -fx-background-color: -danger-light;
+    -fx-text-fill: -danger;
+    -fx-font-size: 13px;
+    -fx-background-radius: 10px;
+    -fx-border-color: rgba(192,57,43,0.2);
+    -fx-border-radius: 10px;
+    -fx-border-width: 0.5px;
+    -fx-cursor: hand;
+    -fx-padding: 9px 0;
+}
+
+.sp-remove-btn:disabled {
+    -fx-opacity: 0.4;
+}
+
+.sp-done-btn {
+    -fx-background-color: -sage;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 20px;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-padding: 10px 0;
+    -fx-margin: 4px 0 0 0;
+}
+
+.sp-done-btn:hover {
+    -fx-background-color: -sage-light;
+}
+
+/* ═══════════════════════════════════════════
+   OPTIONS CARD — improved spacing
+═══════════════════════════════════════════ */
+.option-row {
+    -fx-padding: 16px 16px;
+    -fx-min-height: 52px;
+}
+
+.option-label {
+    -fx-font-size: 15px;
+    -fx-font-weight: 500;
+    -fx-text-fill: -text-primary;
+}
+
+.option-hint {
+    -fx-font-size: 13px;
+    -fx-text-fill: -sage;
+}
