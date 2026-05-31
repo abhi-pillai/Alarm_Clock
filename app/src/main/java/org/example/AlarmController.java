@@ -3,25 +3,27 @@ package org.example;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
-import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
-import java.io.File;
 import java.time.LocalTime;
 import java.util.Optional;
 
 public class AlarmController {
 
-    // ── Picker ──
+    // ── Picker ──────────────────────────────────────────────────────
     @FXML private Label        hourDisplay;
     @FXML private Label        minuteDisplay;
     @FXML private ToggleButton amBtn;
@@ -32,42 +34,41 @@ public class AlarmController {
     @FXML private ListView<String> minuteDrum;
     @FXML private Button       modeToggleBtn;
 
-    // ── Options ──
+    // ── Options ─────────────────────────────────────────────────────
     @FXML private CheckBox     repeatCheck;
     @FXML private TextField    labelField;
     @FXML private ToggleButton snoozeToggle;
+    @FXML private Label        selectedTuneLabel;
 
-    // ── Sound ──
-    @FXML private Label    selectedTuneLabel;
-    @FXML private VBox     soundPickerPanel;
-    @FXML private ListView<TuneManager.Tune> tuneListView;
-
-    // ── List ──
+    // ── Alarm list ──────────────────────────────────────────────────
     @FXML private ListView<Alarm> alarmListView;
     @FXML private Label           statusLabel;
 
-    // ── State ──
+    // ── State ───────────────────────────────────────────────────────
     private int     selectedHour   = 7;
     private int     selectedMinute = 30;
     private boolean isPm           = false;
     private boolean editingHour    = true;
     private boolean drumMode       = false;
 
-    // ✅ KEY FIX: selectedTune is always kept in sync by the list listener
+    // selectedTune is always kept in sync — no @FXML ListView needed
     private TuneManager.Tune selectedTune = null;
 
-    private final ObservableList<TuneManager.Tune> tunes =
+    // Shared tunes list — passed into the popup by reference
+    final ObservableList<TuneManager.Tune> tunes =
             FXCollections.observableArrayList();
+
     private final ObservableList<Alarm> alarms =
             FXCollections.observableArrayList();
 
     private AlarmManager alarmManager;
 
-    // ─── Initialize ──────────────────────────────────────────────────
+    // ── Initialize ──────────────────────────────────────────────────
 
     @FXML
     public void initialize() {
-        // Alarm list
+
+        // ── Alarm list ──
         alarms.addAll(PersistenceManager.load());
         alarmListView.setItems(alarms);
         alarms.addListener(
@@ -77,25 +78,18 @@ public class AlarmController {
         alarmManager = new AlarmManager(alarms, this::onAlarmTriggered);
         alarmManager.start();
 
-        // Tune list
+        // ── Tune list ──
+        // Load tunes into the shared list — no ListView here
         tunes.setAll(TuneManager.loadAll());
-        tuneListView.setItems(tunes);
 
-        // ✅ Wire selection listener BEFORE selectFirst()
-        tuneListView.getSelectionModel()
-            .selectedItemProperty()
-            .addListener((obs, oldVal, newVal) -> {
-                if (newVal != null) selectTune(newVal);
-            });
+        // Set default selected tune directly
+        if (!tunes.isEmpty()) selectTune(tunes.get(0));
 
-        // This fires the listener above → sets selectedTune + label
-        tuneListView.getSelectionModel().selectFirst();
-
-        // AM/PM
+        // ── AM/PM ──
         amBtn.setSelected(true);
         pmBtn.setSelected(false);
 
-        // Drum lists
+        // ── Drum lists ──
         ObservableList<String> hours =
                 FXCollections.observableArrayList();
         for (int i = 1; i <= 12; i++)
@@ -108,6 +102,7 @@ public class AlarmController {
             minutes.add(String.format("%02d", i));
         minuteDrum.setItems(minutes);
 
+        // Sync drum → state
         hourDrum.getSelectionModel()
             .selectedItemProperty()
             .addListener((obs, o, n) -> {
@@ -130,87 +125,64 @@ public class AlarmController {
         drawDial();
     }
 
-    // ─── Tune selection ───────────────────────────────────────────────
+    // ── Tune selection ──────────────────────────────────────────────
 
-    // Single method — always call this to change selected tune
+    // Single method — always call this to update selectedTune
     private void selectTune(TuneManager.Tune tune) {
         selectedTune = tune;
-        selectedTuneLabel.setText(tune.getName());
+        if (selectedTuneLabel != null)
+            selectedTuneLabel.setText(tune.getName());
     }
 
-    // ─── Sound picker handlers ────────────────────────────────────────
+    // ── Sound picker popup ──────────────────────────────────────────
 
     @FXML
     private void handleOpenSoundPicker() {
-        boolean show = !soundPickerPanel.isVisible();
-        soundPickerPanel.setVisible(show);
-        soundPickerPanel.setManaged(show);
-        if (show && selectedTune != null)
-            tuneListView.getSelectionModel().select(selectedTune);
-    }
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource(
+                            "/org/example/sound_picker.fxml"));
+            Parent root = loader.load();
 
-    @FXML
-    private void handleAddTune() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Select alarm tune");
-        chooser.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter(
-                    "Audio files", "*.wav", "*.mp3"),
-            new FileChooser.ExtensionFilter("WAV", "*.wav"),
-            new FileChooser.ExtensionFilter("MP3", "*.mp3")
-        );
+            SoundPickerController controller =
+                    loader.getController();
 
-        File file = chooser.showOpenDialog(
-                tuneListView.getScene().getWindow());
+            // Pass shared tunes list + current selection into popup
+            controller.init(tunes, selectedTune);
 
-        if (file != null) {
-            String raw  = file.getName();
-            String name = raw.contains(".")
-                    ? raw.substring(0, raw.lastIndexOf('.')) : raw;
+            Stage popupStage = new Stage();
+            popupStage.setTitle("Choose sound");
+            popupStage.setScene(new Scene(root));
+            popupStage.setResizable(false);
 
-            TuneManager.Tune newTune =
-                    new TuneManager.Tune(file.getAbsolutePath(), name);
+            // Modal — blocks main window until closed
+            popupStage.initModality(Modality.WINDOW_MODAL);
+            popupStage.initOwner(
+                    selectedTuneLabel.getScene().getWindow());
 
-            boolean exists = tunes.stream()
-                    .anyMatch(t -> t.getId().equals(newTune.getId()));
+            // On close — stop audio + read back selection
+            popupStage.setOnHidden(e -> {
+                SoundEngine.stopCurrent();
+                TuneManager.Tune picked =
+                        controller.getSelectedTune();
+                if (picked != null) selectTune(picked);
+            });
 
-            if (!exists) {
-                tunes.add(newTune);
-                TuneManager.save(tunes);
-            }
+            popupStage.showAndWait();
 
-            // Always select it — even if it already existed
-            tuneListView.getSelectionModel().select(newTune);
+        } catch (Exception e) {
+            System.err.println(
+                    "Failed to open sound picker: "
+                    + e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    @FXML
-    private void handlePreviewTune() {
-        TuneManager.Tune tune =
-                tuneListView.getSelectionModel().getSelectedItem();
-        if (tune != null) SoundEngine.play(tune);
-    }
-
-    @FXML
-    private void handleRemoveTune() {
-        TuneManager.Tune tune =
-                tuneListView.getSelectionModel().getSelectedItem();
-        if (tune == null || tune.isDefault()) return;
-
-        tunes.remove(tune);
-        TuneManager.save(tunes);
-
-        if (tune.equals(selectedTune)) {
-            tuneListView.getSelectionModel().selectFirst();
-        }
-    }
-
-    // ─── OK / Cancel ─────────────────────────────────────────────────
+    // ── OK / Cancel ─────────────────────────────────────────────────
 
     @FXML
     private void handleOk() {
-        // ✅ FIX: read directly from selectedTune field — always in sync
-        // No more || hacks, no more list re-reads needed
+        // Read tune ID directly from selectedTune — always in sync
         String tuneId = (selectedTune != null)
                 ? selectedTune.getId()
                 : TuneManager.Tune.DEFAULT_ID;
@@ -220,12 +192,7 @@ public class AlarmController {
         String    label  = labelField.getText().trim();
         boolean   repeat = repeatCheck.isSelected();
 
-        // Alarm stores tuneId as a dedicated field — clean, no smuggling
         alarms.add(new Alarm(time, label, repeat, tuneId));
-
-        // Close sound panel
-        soundPickerPanel.setVisible(false);
-        soundPickerPanel.setManaged(false);
 
         String tuneName = selectedTune != null
                 ? selectedTune.getName() : "Default beep";
@@ -250,20 +217,16 @@ public class AlarmController {
         labelField.clear();
         repeatCheck.setSelected(false);
 
-        soundPickerPanel.setVisible(false);
-        soundPickerPanel.setManaged(false);
-
-        // Reset to default tune
-        tuneListView.getSelectionModel().selectFirst();
+        // Reset tune to default
+        if (!tunes.isEmpty()) selectTune(tunes.get(0));
 
         statusLabel.setText("");
         refreshDisplay();
     }
 
-    // ─── Alarm trigger ────────────────────────────────────────────────
+    // ── Alarm trigger ────────────────────────────────────────────────
 
     private void onAlarmTriggered(Alarm alarm) {
-        // ✅ FIX: tune comes from dedicated field, not label parsing
         String tuneId = alarm.getTuneId();
 
         TuneManager.Tune tuneToPlay = tunes.stream()
@@ -272,9 +235,11 @@ public class AlarmController {
                 .orElseGet(() -> tunes.isEmpty()
                         ? null : tunes.get(0));
 
-        System.out.println("Alarm firing: " + alarm.getLabel()
+        System.out.println("Alarm firing: "
+                + alarm.getLabel()
                 + " | tuneId: " + tuneId
-                + " | playing: " + (tuneToPlay != null
+                + " | playing: "
+                + (tuneToPlay != null
                         ? tuneToPlay.getName() : "null"));
 
         SoundEngine.play(tuneToPlay);
@@ -308,37 +273,55 @@ public class AlarmController {
         }
     }
 
-    // ─── Alarm list ───────────────────────────────────────────────────
+    // ── Alarm list ───────────────────────────────────────────────────
 
     @FXML
     private void handleDeleteAlarm() {
-        Alarm sel = alarmListView.getSelectionModel().getSelectedItem();
+        Alarm sel = alarmListView
+                .getSelectionModel().getSelectedItem();
         if (sel != null) alarms.remove(sel);
     }
 
-    // ─── Picker display ───────────────────────────────────────────────
+    // ── Snooze toggle ────────────────────────────────────────────────
+
+    @FXML
+    private void handleSnoozeToggle() {
+        snoozeToggle.getStyleClass().removeAll("ios-toggle-on");
+        if (snoozeToggle.isSelected())
+            snoozeToggle.getStyleClass().add("ios-toggle-on");
+    }
+
+    // ── Picker display ────────────────────────────────────────────────
 
     private void refreshDisplay() {
-        hourDisplay.setText(String.format("%02d", selectedHour));
-        minuteDisplay.setText(String.format("%02d", selectedMinute));
+        hourDisplay.setText(
+                String.format("%02d", selectedHour));
+        minuteDisplay.setText(
+                String.format("%02d", selectedMinute));
 
-        hourDisplay.getStyleClass().removeAll("time-display-active");
-        minuteDisplay.getStyleClass().removeAll("time-display-active");
+        hourDisplay.getStyleClass()
+                .removeAll("time-display-active");
+        minuteDisplay.getStyleClass()
+                .removeAll("time-display-active");
 
         if (editingHour)
-            hourDisplay.getStyleClass().add("time-display-active");
+            hourDisplay.getStyleClass()
+                    .add("time-display-active");
         else
-            minuteDisplay.getStyleClass().add("time-display-active");
+            minuteDisplay.getStyleClass()
+                    .add("time-display-active");
 
         drawDial();
     }
 
-    @FXML private void handleHourClick() {
+    @FXML
+    private void handleHourClick() {
         editingHour = true;
         refreshDisplay();
     }
 
-    @FXML private void handleMinuteClick() {
+    @FXML
+    private void handleMinuteClick() {
         editingHour = false;
         refreshDisplay();
     }
@@ -364,22 +347,18 @@ public class AlarmController {
                     .select(selectedHour - 1);
             minuteDrum.getSelectionModel()
                     .select(selectedMinute);
-            hourDrum.scrollTo(Math.max(0, selectedHour - 2));
-            minuteDrum.scrollTo(Math.max(0, selectedMinute - 1));
+            hourDrum.scrollTo(
+                    Math.max(0, selectedHour - 2));
+            minuteDrum.scrollTo(
+                    Math.max(0, selectedMinute - 1));
         }
     }
 
-    @FXML
-    private void handleSnoozeToggle() {
-        snoozeToggle.getStyleClass().removeAll("ios-toggle-on");
-        if (snoozeToggle.isSelected())
-            snoozeToggle.getStyleClass().add("ios-toggle-on");
-    }
-
-    // ─── Dial drawing ─────────────────────────────────────────────────
+    // ── Dial drawing ──────────────────────────────────────────────────
 
     private void drawDial() {
-        GraphicsContext gc = dialCanvas.getGraphicsContext2D();
+        GraphicsContext gc =
+                dialCanvas.getGraphicsContext2D();
         double w  = dialCanvas.getWidth();
         double h  = dialCanvas.getHeight();
         double cx = w / 2, cy = h / 2;
@@ -394,22 +373,26 @@ public class AlarmController {
         // Numbers
         int count = editingHour ? 12 : 60;
         int step  = editingHour ? 1  : 5;
-        gc.setFont(Font.font("Segoe UI", FontWeight.NORMAL, r * 0.13));
+        gc.setFont(Font.font(
+                "Segoe UI", FontWeight.NORMAL, r * 0.13));
         gc.setTextAlign(TextAlignment.CENTER);
 
         for (int i = step; i <= count; i += step) {
-            double angle = Math.toRadians(i * (360.0 / count) - 90);
-            double nr    = r * 0.78;
-            double nx    = cx + nr * Math.cos(angle);
-            double ny    = cy + nr * Math.sin(angle) + r * 0.05;
-            String lbl   = editingHour
+            double angle = Math.toRadians(
+                    i * (360.0 / count) - 90);
+            double nr = r * 0.78;
+            double nx = cx + nr * Math.cos(angle);
+            double ny = cy + nr * Math.sin(angle)
+                    + r * 0.05;
+            String lbl = editingHour
                     ? String.valueOf(i)
-                    : String.format("%02d", i == 60 ? 0 : i);
+                    : String.format("%02d",
+                            i == 60 ? 0 : i);
             gc.setFill(Color.web("#5a7a72"));
             gc.fillText(lbl, nx, ny);
         }
 
-        // Hand
+        // Hand angle
         double handAngle = editingHour
                 ? Math.toRadians(selectedHour * 30 - 90)
                 : Math.toRadians(selectedMinute * 6 - 90);
@@ -424,34 +407,44 @@ public class AlarmController {
         // Selected dot
         double dotR  = r * 0.13;
         double dotRv = r * 0.78;
-        double dx    = cx + dotRv * Math.cos(handAngle);
-        double dy    = cy + dotRv * Math.sin(handAngle);
+        double dx = cx + dotRv * Math.cos(handAngle);
+        double dy = cy + dotRv * Math.sin(handAngle);
         gc.setFill(Color.web("#4a7c6f"));
-        gc.fillOval(dx - dotR, dy - dotR, dotR * 2, dotR * 2);
+        gc.fillOval(dx - dotR, dy - dotR,
+                dotR * 2, dotR * 2);
 
-        // Selected label in white
+        // Label on dot
         gc.setFill(Color.WHITE);
-        gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, r * 0.13));
+        gc.setFont(Font.font(
+                "Segoe UI", FontWeight.BOLD, r * 0.13));
         String selLbl = editingHour
                 ? String.valueOf(selectedHour)
                 : String.format("%02d", selectedMinute);
         gc.fillText(selLbl, dx, dy + r * 0.05);
 
-        // Center dot
+        // Center pivot
         gc.setFill(Color.web("#4a7c6f"));
         gc.fillOval(cx - 5, cy - 5, 10, 10);
         gc.setFill(Color.WHITE);
         gc.fillOval(cx - 2.5, cy - 2.5, 5, 5);
     }
 
-    @FXML private void handleDialPress(MouseEvent e) { updateFromDial(e); }
-    @FXML private void handleDialDrag(MouseEvent e)  { updateFromDial(e); }
+    @FXML
+    private void handleDialPress(MouseEvent e) {
+        updateFromDial(e);
+    }
+
+    @FXML
+    private void handleDialDrag(MouseEvent e) {
+        updateFromDial(e);
+    }
 
     private void updateFromDial(MouseEvent e) {
-        double cx    = dialCanvas.getWidth()  / 2;
-        double cy    = dialCanvas.getHeight() / 2;
+        double cx = dialCanvas.getWidth()  / 2;
+        double cy = dialCanvas.getHeight() / 2;
         double angle = Math.toDegrees(
-                Math.atan2(e.getY() - cy, e.getX() - cx)) + 90;
+                Math.atan2(e.getY() - cy,
+                           e.getX() - cx)) + 90;
         if (angle < 0) angle += 360;
 
         if (editingHour) {
@@ -459,11 +452,13 @@ public class AlarmController {
             if (h == 0) h = 12;
             if (h > 12) h = 12;
             selectedHour = h;
-            // Auto-switch to minute after picking hour
-            if (e.getEventType() == MouseEvent.MOUSE_PRESSED)
+            // Auto-switch to minute after pressing hour
+            if (e.getEventType()
+                    == MouseEvent.MOUSE_PRESSED)
                 editingHour = false;
         } else {
-            selectedMinute = (int) Math.round(angle / 6) % 60;
+            selectedMinute =
+                    (int) Math.round(angle / 6) % 60;
         }
 
         refreshDisplay();
