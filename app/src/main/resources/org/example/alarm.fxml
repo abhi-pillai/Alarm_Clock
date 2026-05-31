@@ -76,64 +76,49 @@
     <VBox styleClass="options-card" spacing="0">
 
         <!-- Repeat -->
-        <HBox styleClass="option-row" alignment="CENTER_LEFT">
+        <HBox styleClass="option-row" alignment="CENTER_LEFT" spacing="12">
             <Label text="Repeat" styleClass="option-label"
-                   HBox.hgrow="ALWAYS"/>
+                HBox.hgrow="ALWAYS"/>
+            <ToggleButton fx:id="snoozeToggle"
+                        styleClass="ios-toggle"
+                        onAction="#handleSnoozeToggle"
+                        visible="false" managed="false"/>
             <CheckBox fx:id="repeatCheck" styleClass="repeat-check"/>
             <Label text="Daily" styleClass="option-hint"
-                   style="-fx-padding: 0 0 0 6px;"/>
+                style="-fx-padding: 0 0 0 4px;"/>
         </HBox>
         <Separator styleClass="option-sep"/>
 
         <!-- Label -->
-        <HBox styleClass="option-row" alignment="CENTER_LEFT" spacing="10">
+        <HBox styleClass="option-row" alignment="CENTER_LEFT" spacing="12">
             <Label text="Label" styleClass="option-label"/>
             <TextField fx:id="labelField"
-                       promptText="e.g. Wake up"
-                       HBox.hgrow="ALWAYS"
-                       styleClass="label-field"/>
+                    promptText="e.g. Wake up"
+                    HBox.hgrow="ALWAYS"
+                    styleClass="label-field"/>
         </HBox>
         <Separator styleClass="option-sep"/>
 
-        <!-- Sound -->
-        <HBox styleClass="option-row" alignment="CENTER_LEFT">
+        <!-- Sound — opens popup window -->
+        <HBox styleClass="option-row" alignment="CENTER_LEFT" spacing="8">
             <Label text="Sound" styleClass="option-label"
-                   HBox.hgrow="ALWAYS"/>
-            <Label fx:id="selectedTuneLabel" text="Default beep"
-                   styleClass="option-hint"/>
-            <Button text="›" onAction="#handleOpenSoundPicker"
+                HBox.hgrow="ALWAYS"/>
+            <Label fx:id="selectedTuneLabel"
+                text="Default beep"
+                styleClass="option-hint"/>
+            <Button text="›"
+                    onAction="#handleOpenSoundPicker"
                     styleClass="option-chevron"/>
         </HBox>
-
-        <!-- Sound picker panel -->
-        <VBox fx:id="soundPickerPanel"
-              visible="false" managed="false"
-              styleClass="sound-panel" spacing="0">
-            <ListView fx:id="tuneListView" prefHeight="150"
-                      styleClass="tune-list"/>
-            <HBox spacing="8" styleClass="sound-actions">
-                <Button text="+ Add tune"
-                        onAction="#handleAddTune"
-                        styleClass="add-tune-btn"
-                        HBox.hgrow="ALWAYS"/>
-                <Button text="▶ Preview"
-                        onAction="#handlePreviewTune"
-                        styleClass="preview-btn"/>
-                <Button text="Remove"
-                        onAction="#handleRemoveTune"
-                        styleClass="remove-tune-btn"/>
-            </HBox>
-        </VBox>
-
         <Separator styleClass="option-sep"/>
 
         <!-- Snooze -->
-        <HBox styleClass="option-row" alignment="CENTER_LEFT">
+        <HBox styleClass="option-row" alignment="CENTER_LEFT" spacing="12">
             <Label text="Snooze" styleClass="option-label"
-                   HBox.hgrow="ALWAYS"/>
+                HBox.hgrow="ALWAYS"/>
             <ToggleButton fx:id="snoozeToggle"
-                          styleClass="ios-toggle"
-                          onAction="#handleSnoozeToggle"/>
+                        styleClass="ios-toggle"
+                        onAction="#handleSnoozeToggle"/>
         </HBox>
 
     </VBox>
@@ -147,15 +132,20 @@
     </HBox>
 
     <!-- ── ALARM LIST ── -->
-    <ListView fx:id="alarmListView" prefHeight="180"
-              styleClass="alarm-list" VBox.vgrow="ALWAYS">
+    <Label text="Saved alarms" styleClass="picker-heading"
+        style="-fx-padding: 4px 2px 0 2px;"/>
+
+    <ListView fx:id="alarmListView"
+            prefHeight="200"
+            styleClass="alarm-list"
+            VBox.vgrow="ALWAYS">
         <placeholder>
             <Label text="No alarms set yet"
-                   styleClass="placeholder-label"/>
+                styleClass="placeholder-label"/>
         </placeholder>
     </ListView>
 
-    <HBox alignment="CENTER_RIGHT" style="-fx-padding: 0 0 4px 0;">
+    <HBox alignment="CENTER_RIGHT">
         <Button text="Delete selected"
                 onAction="#handleDeleteAlarm"
                 styleClass="delete-button"
@@ -163,6 +153,6 @@
     </HBox>
 
     <Label fx:id="statusLabel" text=""
-           styleClass="status-label"/>
+        styleClass="status-label"/>
 
 </VBox>
