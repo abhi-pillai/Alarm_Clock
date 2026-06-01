@@ -38,34 +38,18 @@
                 prefWidth="100"/>
     </HBox>
 
-    <!-- Sound row -->
+    <!-- Sound row — opens popup -->
     <VBox styleClass="timer-sound-card" spacing="0">
         <HBox styleClass="option-row" alignment="CENTER_LEFT">
             <Label text="Sound" styleClass="option-label"
                    HBox.hgrow="ALWAYS"/>
-            <Label fx:id="selectedTuneLabel" text="Default beep"
+            <Label fx:id="selectedTuneLabel"
+                   text="Default beep"
                    styleClass="option-hint"/>
-            <Button text="›" onAction="#handleOpenSoundPicker"
+            <Button text="›"
+                    onAction="#handleOpenSoundPicker"
                     styleClass="option-chevron"/>
         </HBox>
-
-        <VBox fx:id="soundPickerPanel" styleClass="sound-panel"
-              visible="false" managed="false" spacing="0">
-            <ListView fx:id="tuneListView" prefHeight="140"
-                      styleClass="tune-list"/>
-            <HBox spacing="8" styleClass="sound-actions">
-                <Button text="+ Add tune"
-                        onAction="#handleAddTune"
-                        styleClass="add-tune-btn"
-                        HBox.hgrow="ALWAYS"/>
-                <Button text="▶ Preview"
-                        onAction="#handlePreviewTune"
-                        styleClass="preview-btn"/>
-                <Button text="Remove"
-                        onAction="#handleRemoveTune"
-                        styleClass="remove-tune-btn"/>
-            </HBox>
-        </VBox>
     </VBox>
 
     <Label fx:id="timerStatusLabel" text=""
