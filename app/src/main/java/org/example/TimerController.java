@@ -4,18 +4,21 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.ArcType;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
-import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
-import java.io.File;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -23,110 +26,110 @@ import java.util.concurrent.TimeUnit;
 
 public class TimerController {
 
+    // ── UI ───────────────────────────────────────────────────────────
     @FXML private Canvas  progressCanvas;
     @FXML private Button  startPauseBtn;
     @FXML private Label   timerStatusLabel;
+    @FXML private Label   selectedTuneLabel;
 
-    @FXML private Label                      selectedTuneLabel;
-    @FXML private VBox                       soundPickerPanel;
-    @FXML private ListView<TuneManager.Tune> tuneListView;
-
-    private int    remainingSeconds = 5 * 60;
-    private int    totalSeconds     = 5 * 60; // tracks original for ring %
-    private boolean running         = false;
+    // ── Timer state ──────────────────────────────────────────────────
+    private int     remainingSeconds = 5 * 60;
+    private int     totalSeconds     = 5 * 60;
+    private boolean running          = false;
 
     private ScheduledExecutorService scheduler;
     private ScheduledFuture<?>        tickFuture;
 
+    // ── Sound state ──────────────────────────────────────────────────
+    // Owns its own tunes list loaded from the same tunes.txt as Alarm
     private TuneManager.Tune selectedTune = null;
     private final ObservableList<TuneManager.Tune> tunes =
             FXCollections.observableArrayList();
 
+    // ── Initialize ───────────────────────────────────────────────────
+
     @FXML
     public void initialize() {
+        // Scheduler for countdown
         scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "timer-thread");
             t.setDaemon(true);
             return t;
         });
 
+        // Load tunes from shared tunes.txt — same file as Alarm tab
         tunes.setAll(TuneManager.loadAll());
-        tuneListView.setItems(tunes);
 
-        tuneListView.getSelectionModel()
-            .selectedItemProperty()
-            .addListener((obs, o, n) -> { if (n != null) selectTune(n); });
-
-        tuneListView.getSelectionModel().selectFirst();
+        // Default to first tune (built-in beep)
+        if (!tunes.isEmpty()) selectTune(tunes.get(0));
 
         drawProgress();
     }
 
-    // ─── Progress ring drawing ────────────────────────────────────────
+    // ── Tune selection ───────────────────────────────────────────────
 
-    private void drawProgress() {
-        GraphicsContext gc = progressCanvas.getGraphicsContext2D();
-        double w  = progressCanvas.getWidth();
-        double h  = progressCanvas.getHeight();
-        double cx = w / 2;
-        double cy = h / 2;
-        double r  = Math.min(w, h) / 2 - 14;
-
-        gc.clearRect(0, 0, w, h);
-
-        // Background ring
-        gc.setStroke(Color.web("#e8f4f1"));
-        gc.setLineWidth(10);
-        gc.setLineCap(StrokeLineCap.ROUND);
-        gc.strokeOval(cx - r, cy - r, r * 2, r * 2);
-
-        // Progress arc — sage green
-        double progress = totalSeconds > 0
-                ? (double) remainingSeconds / totalSeconds : 0;
-
-        if (progress > 0) {
-            gc.setStroke(Color.web("#4a7c6f"));
-            gc.setLineWidth(10);
-            gc.setLineCap(StrokeLineCap.ROUND);
-
-            double startAngle = 90;  // start from top
-            double arcExtent  = progress * 360;
-
-            // JavaFX arc: positive = counter-clockwise, so negate
-            gc.strokeArc(
-                cx - r, cy - r, r * 2, r * 2,
-                startAngle, arcExtent,
-                javafx.scene.shape.ArcType.OPEN
-            );
-        }
-
-        // Time text in center
-        int h2 = remainingSeconds / 3600;
-        int m  = (remainingSeconds % 3600) / 60;
-        int s  = remainingSeconds % 60;
-        String timeStr = String.format("%02d:%02d:%02d", h2, m, s);
-
-        gc.setFill(Color.web("#1a1a18"));
-        gc.setFont(Font.font("Segoe UI Light", FontWeight.LIGHT, 28));
-        gc.setTextAlign(TextAlignment.CENTER);
-        gc.fillText(timeStr, cx, cy + 10);
-
-        // Sub-label
-        gc.setFill(Color.web("#9a9a94"));
-        gc.setFont(Font.font("Segoe UI", FontWeight.NORMAL, 11));
-        gc.fillText(running ? "remaining" : (remainingSeconds == 0 ? "done" : "paused"),
-                cx, cy + 28);
+    private void selectTune(TuneManager.Tune tune) {
+        selectedTune = tune;
+        if (selectedTuneLabel != null)
+            selectedTuneLabel.setText(tune.getName());
     }
 
-    // ─── Timer controls ──────────────────────────────────────────────
+    // ── Sound picker popup ───────────────────────────────────────────
 
-    @FXML private void handleStartPause() {
-        if (running) pauseTimer(); else startTimer();
+    @FXML
+    private void handleOpenSoundPicker() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource(
+                            "/org/example/sound_picker.fxml"));
+            Parent root = loader.load();
+
+            SoundPickerController controller =
+                    loader.getController();
+
+            // Pass shared tunes list + current selection
+            controller.init(tunes, selectedTune);
+
+            Stage popupStage = new Stage();
+            popupStage.setTitle("Choose sound");
+            popupStage.setScene(new Scene(root));
+            popupStage.setResizable(false);
+
+            popupStage.initModality(Modality.WINDOW_MODAL);
+            popupStage.initOwner(
+                    selectedTuneLabel.getScene().getWindow());
+
+            // On close — stop audio + read back selection
+            popupStage.setOnHidden(e -> {
+                SoundEngine.stopCurrent();
+                TuneManager.Tune picked =
+                        controller.getSelectedTune();
+                if (picked != null) selectTune(picked);
+            });
+
+            popupStage.showAndWait();
+
+        } catch (Exception e) {
+            System.err.println(
+                    "Failed to open sound picker: "
+                    + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // ── Timer controls ───────────────────────────────────────────────
+
+    @FXML
+    private void handleStartPause() {
+        if (running) pauseTimer();
+        else         startTimer();
     }
 
     private void startTimer() {
         if (remainingSeconds <= 0) return;
-        totalSeconds = remainingSeconds; // lock total for ring calculation
+
+        // Lock total for ring percentage calculation
+        totalSeconds = remainingSeconds;
         running      = true;
         startPauseBtn.setText("Pause");
         timerStatusLabel.setText("");
@@ -156,7 +159,8 @@ public class TimerController {
         drawProgress();
     }
 
-    @FXML private void handleReset() {
+    @FXML
+    private void handleReset() {
         pauseTimer();
         SoundEngine.stopCurrent();
         remainingSeconds = 5 * 60;
@@ -178,63 +182,66 @@ public class TimerController {
         drawProgress();
     }
 
-    // ─── Sound picker ────────────────────────────────────────────────
+    // ── Progress ring drawing ─────────────────────────────────────────
 
-    @FXML private void handleOpenSoundPicker() {
-        boolean show = !soundPickerPanel.isVisible();
-        soundPickerPanel.setVisible(show);
-        soundPickerPanel.setManaged(show);
-        if (show && selectedTune != null)
-            tuneListView.getSelectionModel().select(selectedTune);
-    }
+    private void drawProgress() {
+        GraphicsContext gc = progressCanvas.getGraphicsContext2D();
+        double w  = progressCanvas.getWidth();
+        double h  = progressCanvas.getHeight();
+        double cx = w / 2;
+        double cy = h / 2;
+        double r  = Math.min(w, h) / 2 - 14;
 
-    @FXML private void handleAddTune() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Select alarm tune");
-        chooser.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter("Audio files", "*.wav", "*.mp3"),
-            new FileChooser.ExtensionFilter("WAV",  "*.wav"),
-            new FileChooser.ExtensionFilter("MP3",  "*.mp3")
-        );
-        File file = chooser.showOpenDialog(tuneListView.getScene().getWindow());
-        if (file != null) {
-            String raw  = file.getName();
-            String name = raw.contains(".")
-                    ? raw.substring(0, raw.lastIndexOf('.')) : raw;
-            TuneManager.Tune t =
-                    new TuneManager.Tune(file.getAbsolutePath(), name);
-            boolean exists = tunes.stream()
-                    .anyMatch(x -> x.getId().equals(t.getId()));
-            if (!exists) {
-                tunes.add(t);
-                TuneManager.save(tunes);
-                tuneListView.getSelectionModel().select(t);
-            }
+        gc.clearRect(0, 0, w, h);
+
+        // Background ring (muted sage)
+        gc.setStroke(Color.web("#e8f4f1"));
+        gc.setLineWidth(10);
+        gc.setLineCap(StrokeLineCap.ROUND);
+        gc.strokeOval(cx - r, cy - r, r * 2, r * 2);
+
+        // Foreground arc (sage green, shrinks as time passes)
+        double progress = totalSeconds > 0
+                ? (double) remainingSeconds / totalSeconds
+                : 0;
+
+        if (progress > 0) {
+            gc.setStroke(Color.web("#4a7c6f"));
+            gc.setLineWidth(10);
+            gc.setLineCap(StrokeLineCap.ROUND);
+            gc.strokeArc(
+                cx - r, cy - r, r * 2, r * 2,
+                90,             // start at top
+                progress * 360, // extent shrinks over time
+                ArcType.OPEN
+            );
         }
+
+        // Time text
+        int hh = remainingSeconds / 3600;
+        int mm = (remainingSeconds % 3600) / 60;
+        int ss = remainingSeconds % 60;
+        String timeStr = String.format(
+                "%02d:%02d:%02d", hh, mm, ss);
+
+        gc.setFill(Color.web("#1a1a18"));
+        gc.setFont(Font.font(
+                "Segoe UI Light", FontWeight.LIGHT, 28));
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.fillText(timeStr, cx, cy + 10);
+
+        // Sub-label beneath time
+        gc.setFill(Color.web("#9a9a94"));
+        gc.setFont(Font.font(
+                "Segoe UI", FontWeight.NORMAL, 11));
+        String subLabel = running
+                ? "remaining"
+                : remainingSeconds == 0
+                        ? "done" : "ready";
+        gc.fillText(subLabel, cx, cy + 28);
     }
 
-    @FXML private void handlePreviewTune() {
-        TuneManager.Tune t =
-                tuneListView.getSelectionModel().getSelectedItem();
-        if (t != null) SoundEngine.play(t);
-    }
-
-    @FXML private void handleRemoveTune() {
-        TuneManager.Tune t =
-                tuneListView.getSelectionModel().getSelectedItem();
-        if (t == null || t.isDefault()) return;
-        tunes.remove(t);
-        TuneManager.save(tunes);
-        if (t.equals(selectedTune)) {
-            selectTune(tunes.get(0));
-            tuneListView.getSelectionModel().selectFirst();
-        }
-    }
-
-    private void selectTune(TuneManager.Tune tune) {
-        selectedTune = tune;
-        selectedTuneLabel.setText(tune.getName());
-    }
+    // ── Lifecycle ────────────────────────────────────────────────────
 
     public void shutdown() {
         SoundEngine.stopCurrent();
