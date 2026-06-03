@@ -2,157 +2,38 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.canvas.Canvas?>
-<?import javafx.scene.layout.StackPane?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="org.example.AlarmController"
-      spacing="12"
+      spacing="0"
       styleClass="alarm-root"
       stylesheets="@style.css">
 
-    <!-- ── PICKER CARD ── -->
-    <VBox styleClass="picker-card" spacing="14">
-
-        <Label text="Set alarm" styleClass="picker-heading"/>
-
-        <HBox spacing="16" alignment="TOP_CENTER">
-
-            <!-- Left: digital display + AM/PM + mode toggle -->
-            <VBox spacing="10" alignment="CENTER" minWidth="150">
-
-                <HBox spacing="6" alignment="CENTER">
-                    <Label fx:id="hourDisplay" text="07"
-                           styleClass="time-display time-display-active"
-                           onMouseClicked="#handleHourClick"/>
-                    <Label text=":" styleClass="time-colon"/>
-                    <Label fx:id="minuteDisplay" text="30"
-                           styleClass="time-display"
-                           onMouseClicked="#handleMinuteClick"/>
-                </HBox>
-
-                <HBox styleClass="ampm-group" spacing="0"
-                      alignment="CENTER">
-                    <ToggleButton fx:id="amBtn" text="AM"
-                                  styleClass="ampm-btn"
-                                  onAction="#handleAmPm"/>
-                    <ToggleButton fx:id="pmBtn" text="PM"
-                                  styleClass="ampm-btn"
-                                  onAction="#handleAmPm"/>
-                </HBox>
-
-                <Button fx:id="modeToggleBtn" text="⌨"
-                        onAction="#handleModeToggle"
-                        styleClass="mode-btn"/>
-
-            </VBox>
-
-            <!-- Right: dial or drum -->
-            <StackPane fx:id="pickerStack"
-                       HBox.hgrow="ALWAYS"
-                       minWidth="210" minHeight="210">
-
-                <Canvas fx:id="dialCanvas" width="210" height="210"
-                        onMousePressed="#handleDialPress"
-                        onMouseDragged="#handleDialDrag"/>
-
-                <HBox fx:id="drumBox" spacing="4"
-                      alignment="CENTER"
-                      visible="false" managed="false"
-                      styleClass="drum-box">
-                    <ListView fx:id="hourDrum" prefWidth="95"
-                              styleClass="drum-list"/>
-                    <ListView fx:id="minuteDrum" prefWidth="95"
-                              styleClass="drum-list"/>
-                </HBox>
-
-            </StackPane>
-
-        </HBox>
-
-    </VBox>
-
-    <!-- ── OPTIONS CARD ── -->
-    <VBox styleClass="options-card" spacing="0">
-
-        <!-- Repeat -->
-        <HBox styleClass="option-row" alignment="CENTER_LEFT" spacing="12">
-            <Label text="Repeat" styleClass="option-label"
-                HBox.hgrow="ALWAYS"/>
-            <ToggleButton fx:id="snoozeToggle"
-                        styleClass="ios-toggle"
-                        onAction="#handleSnoozeToggle"
-                        visible="false" managed="false"/>
-            <CheckBox fx:id="repeatCheck" styleClass="repeat-check"/>
-            <Label text="Daily" styleClass="option-hint"
-                style="-fx-padding: 0 0 0 4px;"/>
-        </HBox>
-        <Separator styleClass="option-sep"/>
-
-        <!-- Label -->
-        <HBox styleClass="option-row" alignment="CENTER_LEFT" spacing="12">
-            <Label text="Label" styleClass="option-label"/>
-            <TextField fx:id="labelField"
-                    promptText="e.g. Wake up"
-                    HBox.hgrow="ALWAYS"
-                    styleClass="label-field"/>
-        </HBox>
-        <Separator styleClass="option-sep"/>
-
-        <!-- Sound — opens popup window -->
-        <HBox styleClass="option-row" alignment="CENTER_LEFT" spacing="8">
-            <Label text="Sound" styleClass="option-label"
-                HBox.hgrow="ALWAYS"/>
-            <Label fx:id="selectedTuneLabel"
-                text="Default beep"
-                styleClass="option-hint"/>
-            <Button text="›"
-                    onAction="#handleOpenSoundPicker"
-                    styleClass="option-chevron"/>
-        </HBox>
-        <Separator styleClass="option-sep"/>
-
-        <!-- Snooze -->
-        <HBox styleClass="option-row" alignment="CENTER_LEFT" spacing="12">
-            <Label text="Snooze" styleClass="option-label"
-                HBox.hgrow="ALWAYS"/>
-            <ToggleButton fx:id="snoozeToggle"
-                        styleClass="ios-toggle"
-                        onAction="#handleSnoozeToggle"/>
-        </HBox>
-
-    </VBox>
-
-    <!-- ── ACTIONS ── -->
-    <HBox styleClass="action-row" alignment="CENTER_RIGHT" spacing="10">
-        <Button text="Cancel" onAction="#handleCancel"
-                styleClass="action-cancel"/>
-        <Button text="Save alarm" onAction="#handleOk"
-                styleClass="action-ok"/>
+    <!-- Top bar -->
+    <HBox styleClass="alarm-topbar" alignment="CENTER_LEFT">
+        <Label text="Alarms" styleClass="alarm-topbar-title"
+               HBox.hgrow="ALWAYS"/>
+        <Button text="+" onAction="#handleAddAlarm"
+                styleClass="alarm-add-fab"/>
     </HBox>
 
-    <!-- ── ALARM LIST ── -->
-    <Label text="Saved alarms" styleClass="picker-heading"
-        style="-fx-padding: 4px 2px 0 2px;"/>
-
+    <!-- Alarm list -->
     <ListView fx:id="alarmListView"
-            prefHeight="200"
-            styleClass="alarm-list"
-            VBox.vgrow="ALWAYS">
+              VBox.vgrow="ALWAYS"
+              styleClass="alarm-main-list">
         <placeholder>
-            <Label text="No alarms set yet"
-                styleClass="placeholder-label"/>
+            <VBox alignment="CENTER" spacing="10"
+                  style="-fx-padding:60px 20px;">
+                <Label text="No alarms yet"
+                       styleClass="empty-title"/>
+                <Label text="Tap + to add your first alarm"
+                       styleClass="empty-hint"/>
+            </VBox>
         </placeholder>
     </ListView>
 
-    <HBox alignment="CENTER_RIGHT">
-        <Button text="Delete selected"
-                onAction="#handleDeleteAlarm"
-                styleClass="delete-button"
-                prefWidth="160"/>
-    </HBox>
-
     <Label fx:id="statusLabel" text=""
-        styleClass="status-label"/>
+           styleClass="status-label"
+           style="-fx-padding:6px 16px;"/>
 
 </VBox>
