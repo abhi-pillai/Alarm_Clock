@@ -772,3 +772,172 @@
     -fx-font-size: 13px;
     -fx-text-fill: -sage;
 }
+
+/* ═══════════════════════════════════════════
+   ALARM MAIN LIST
+═══════════════════════════════════════════ */
+.alarm-topbar {
+    -fx-padding: 20px 20px 12px 20px;
+    -fx-background-color: -surface;
+}
+
+.alarm-topbar-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: 500;
+    -fx-text-fill: -text-primary;
+}
+
+.alarm-add-fab {
+    -fx-background-color: -sage;
+    -fx-text-fill: white;
+    -fx-font-size: 22px;
+    -fx-font-weight: 300;
+    -fx-background-radius: 50%;
+    -fx-min-width: 40px;
+    -fx-max-width: 40px;
+    -fx-min-height: 40px;
+    -fx-max-height: 40px;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+}
+
+.alarm-add-fab:hover {
+    -fx-background-color: -sage-light;
+}
+
+.alarm-main-list {
+    -fx-background-color: -surface;
+    -fx-border-color: transparent;
+    -fx-padding: 0 12px;
+}
+
+.alarm-main-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 4px 0;
+    -fx-border-color: transparent;
+}
+
+.alarm-main-list .list-cell:selected,
+.alarm-main-list .list-cell:focused {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.alarm-card {
+    -fx-background-color: -card;
+    -fx-background-radius: 16px;
+    -fx-border-color: -border;
+    -fx-border-radius: 16px;
+    -fx-border-width: 0.5px;
+    -fx-padding: 14px 16px 12px 16px;
+    -fx-cursor: hand;
+}
+
+.alarm-card:hover {
+    -fx-border-color: -sage-border;
+}
+
+.alarm-card-time {
+    -fx-font-size: 34px;
+    -fx-font-weight: 300;
+    -fx-font-family: "Segoe UI Light", sans-serif;
+    -fx-text-fill: -text-primary;
+}
+
+.alarm-card-period {
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-text-fill: -sage;
+}
+
+.alarm-card-meta {
+    -fx-font-size: 12px;
+    -fx-text-fill: -text-secondary;
+}
+
+.alarm-badge {
+    -fx-font-size: 11px;
+    -fx-text-fill: -sage;
+    -fx-background-color: -sage-muted;
+    -fx-padding: 2px 8px;
+    -fx-background-radius: 20px;
+}
+
+.reapply-btn {
+    -fx-background-color: -sage-muted;
+    -fx-text-fill: -sage;
+    -fx-font-size: 12px;
+    -fx-background-radius: 20px;
+    -fx-border-color: -sage-border;
+    -fx-border-radius: 20px;
+    -fx-border-width: 0.5px;
+    -fx-cursor: hand;
+    -fx-padding: 4px 12px;
+}
+
+.reapply-btn:hover {
+    -fx-background-color: -sage-border;
+}
+
+.card-delete-btn {
+    -fx-background-color: -danger-light;
+    -fx-text-fill: -danger;
+    -fx-font-size: 12px;
+    -fx-background-radius: 20px;
+    -fx-border-color: rgba(192,57,43,0.2);
+    -fx-border-radius: 20px;
+    -fx-border-width: 0.5px;
+    -fx-cursor: hand;
+    -fx-padding: 4px 12px;
+}
+
+.empty-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: 500;
+    -fx-text-fill: -text-secondary;
+}
+
+.empty-hint {
+    -fx-font-size: 13px;
+    -fx-text-fill: -text-hint;
+}
+
+/* ═══════════════════════════════════════════
+   ALARM SETTER POPUP
+═══════════════════════════════════════════ */
+.setter-root {
+    -fx-background-color: -surface;
+}
+
+.setter-header {
+    -fx-background-color: -card;
+    -fx-padding: 18px 20px 16px 20px;
+    -fx-border-color: transparent transparent -border transparent;
+    -fx-border-width: 0 0 0.5px 0;
+}
+
+.setter-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: 500;
+    -fx-text-fill: -text-primary;
+}
+
+.setter-picker-row {
+    -fx-padding: 20px 16px 16px 16px;
+    -fx-background-color: -card;
+}
+
+.setter-options {
+    -fx-background-color: -card;
+    -fx-padding: 0 16px;
+    -fx-border-color: -border transparent transparent transparent;
+    -fx-border-width: 0.5px 0 0 0;
+}
+
+.setter-actions {
+    -fx-padding: 14px 16px;
+    -fx-background-color: -surface;
+    -fx-border-color: -border transparent transparent transparent;
+    -fx-border-width: 0.5px 0 0 0;
+}
