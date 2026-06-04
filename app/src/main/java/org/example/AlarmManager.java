@@ -52,10 +52,10 @@ public class AlarmManager {
                 Platform.runLater(() -> {
                     onAlarmTriggered.accept(alarm);
 
-                    // One-time alarm: remove it after firing
-                    if (!alarm.isRepeat()) {
-                        alarms.remove(alarm);
-                    }
+                    // // One-time alarm: remove it after firing
+                    // if (!alarm.isRepeat()) {
+                    //     alarms.remove(alarm);
+                    // }
                 });
             }
 
