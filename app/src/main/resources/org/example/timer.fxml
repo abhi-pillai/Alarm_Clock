@@ -3,56 +3,73 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.canvas.Canvas?>
+<?import javafx.geometry.Insets?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="org.example.TimerController"
       alignment="CENTER"
-      spacing="16"
+      spacing="14"
       styleClass="tab-content">
 
-    <!-- Progress ring with time inside -->
-    <Canvas fx:id="progressCanvas" width="200" height="200"/>
-
-    <!-- Adjustment buttons -->
+    <!-- ① Preset chips + custom -->
     <HBox spacing="8" alignment="CENTER">
-        <Button text="− 1m"  onAction="#handleMinusMin"
-                styleClass="timer-adj-button"/>
-        <Button text="− 10s" onAction="#handleMinusSec"
-                styleClass="timer-adj-button"/>
-        <Button text="+ 10s" onAction="#handlePlusSec"
-                styleClass="timer-adj-button"/>
-        <Button text="+ 1m"  onAction="#handlePlusMin"
-                styleClass="timer-adj-button"/>
+        <ToggleButton fx:id="preset5Btn"
+                      text="5 min"
+                      onAction="#handlePreset5"
+                      styleClass="preset-chip"/>
+        <ToggleButton fx:id="preset10Btn"
+                      text="10 min"
+                      onAction="#handlePreset10"
+                      styleClass="preset-chip"/>
+        <ToggleButton fx:id="preset15Btn"
+                      text="15 min"
+                      onAction="#handlePreset15"
+                      styleClass="preset-chip"/>
+        <Button text="＋ Custom"
+                onAction="#handleAddCustom"
+                styleClass="preset-chip-add"/>
     </HBox>
 
-    <!-- Start/Pause and Reset -->
-    <HBox spacing="12" alignment="CENTER">
+    <!-- ② Progress ring -->
+    <Canvas fx:id="progressCanvas" width="200" height="200"/>
+
+    <!-- ③ Fine-adjust row — only visible for custom timers -->
+    <HBox fx:id="adjRow" spacing="8" alignment="CENTER" visible="false" managed="false">
+        <Button text="− 1m"  onAction="#handleMinusMin" styleClass="timer-adj-button"/>
+        <Button text="− 10s" onAction="#handleMinusSec" styleClass="timer-adj-button"/>
+        <Button text="+ 10s" onAction="#handlePlusSec"  styleClass="timer-adj-button"/>
+        <Button text="+ 1m"  onAction="#handlePlusMin"  styleClass="timer-adj-button"/>
+    </HBox>
+
+    <!-- ④ Play/Pause · Reset · Stop Music -->
+    <HBox spacing="10" alignment="CENTER">
         <Button fx:id="startPauseBtn"
-                text="Start"
+                text="▶  Start"
                 onAction="#handleStartPause"
                 styleClass="add-button"
-                prefWidth="120"/>
-        <Button text="Reset"
+                prefWidth="110"/>
+        <Button text="↺  Reset"
                 onAction="#handleReset"
                 styleClass="delete-button"
                 prefWidth="100"/>
+        <Button fx:id="stopMusicBtn"
+                text="■  Stop"
+                onAction="#handleStopMusic"
+                styleClass="stop-music-button"
+                prefWidth="100"
+                disable="true"/>
     </HBox>
 
-    <!-- Sound row — opens popup -->
+    <!-- ⑤ Sound row -->
     <VBox styleClass="timer-sound-card" spacing="0">
         <HBox styleClass="option-row" alignment="CENTER_LEFT">
-            <Label text="Sound" styleClass="option-label"
-                   HBox.hgrow="ALWAYS"/>
-            <Label fx:id="selectedTuneLabel"
-                   text="Default beep"
-                   styleClass="option-hint"/>
-            <Button text="›"
-                    onAction="#handleOpenSoundPicker"
-                    styleClass="option-chevron"/>
+            <Label text="Sound" styleClass="option-label" HBox.hgrow="ALWAYS"/>
+            <Label fx:id="selectedTuneLabel" text="Default beep" styleClass="option-hint"/>
+            <Button text="›" onAction="#handleOpenSoundPicker" styleClass="option-chevron"/>
         </HBox>
     </VBox>
 
-    <Label fx:id="timerStatusLabel" text=""
-           styleClass="status-label"/>
+    <!-- ⑥ Status label -->
+    <Label fx:id="timerStatusLabel" text="" styleClass="status-label"/>
 
 </VBox>
