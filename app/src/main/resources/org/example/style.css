@@ -941,3 +941,129 @@
     -fx-border-color: -border transparent transparent transparent;
     -fx-border-width: 0.5px 0 0 0;
 }
+
+/* ═══════════════════════════════════════════
+   TIMER — SECTION TITLE
+═══════════════════════════════════════════ */
+.section-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-hint;
+    -fx-letter-spacing: 0.5px;
+}
+
+/* ═══════════════════════════════════════════
+   TIMER — PRESET BUTTONS
+═══════════════════════════════════════════ */
+.preset-btn {
+    -fx-background-color: -card;
+    -fx-background-radius: 14px;
+    -fx-border-color: -border;
+    -fx-border-radius: 14px;
+    -fx-border-width: 0.5px;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+}
+
+.preset-btn:hover {
+    -fx-border-color: -sage-border;
+    -fx-background-color: -sage-muted;
+}
+
+.preset-btn-active {
+    -fx-background-color: -sage-muted;
+    -fx-border-color: -sage;
+    -fx-border-width: 1.5px;
+}
+
+.preset-time-lbl {
+    -fx-font-size: 17px;
+    -fx-font-weight: 500;
+    -fx-text-fill: -text-primary;
+}
+
+.preset-sub-lbl {
+    -fx-font-size: 10px;
+    -fx-text-fill: -text-hint;
+}
+
+.preset-btn-active .preset-time-lbl {
+    -fx-text-fill: -sage;
+}
+
+.preset-btn-active .preset-sub-lbl {
+    -fx-text-fill: -sage;
+}
+
+.add-preset-btn {
+    -fx-background-color: transparent;
+    -fx-background-radius: 14px;
+    -fx-border-color: -border;
+    -fx-border-radius: 14px;
+    -fx-border-width: 0.5px;
+    -fx-border-style: dashed;
+    -fx-text-fill: -text-hint;
+    -fx-font-size: 20px;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+}
+
+.add-preset-btn:hover {
+    -fx-border-color: -sage-border;
+    -fx-text-fill: -sage;
+}
+
+/* ═══════════════════════════════════════════
+   TIMER — CONTROLS
+═══════════════════════════════════════════ */
+.timer-play-btn {
+    -fx-background-color: -sage;
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-background-radius: 50%;
+    -fx-min-width: 56px;
+    -fx-max-width: 56px;
+    -fx-min-height: 56px;
+    -fx-max-height: 56px;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+}
+
+.timer-play-btn:hover {
+    -fx-background-color: -sage-light;
+}
+
+.timer-ctrl-btn {
+    -fx-background-color: -card;
+    -fx-text-fill: -text-secondary;
+    -fx-font-size: 12px;
+    -fx-background-radius: 20px;
+    -fx-border-color: -border;
+    -fx-border-radius: 20px;
+    -fx-border-width: 0.5px;
+    -fx-cursor: hand;
+    -fx-padding: 8px 16px;
+}
+
+.timer-ctrl-btn:hover {
+    -fx-background-color: -sage-muted;
+    -fx-border-color: -sage-border;
+    -fx-text-fill: -sage;
+}
+
+.timer-stop-btn {
+    -fx-background-color: -danger-light;
+    -fx-text-fill: -danger;
+    -fx-font-size: 12px;
+    -fx-background-radius: 20px;
+    -fx-border-color: rgba(192,57,43,0.2);
+    -fx-border-radius: 20px;
+    -fx-border-width: 0.5px;
+    -fx-cursor: hand;
+    -fx-padding: 8px 16px;
+}
+
+.timer-stop-btn:hover {
+    -fx-background-color: rgba(192,57,43,0.15);
+}
