@@ -4,24 +4,25 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.ArcType;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
+import javafx.stage.FileChooser;
 
-import java.util.Optional;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -29,39 +30,46 @@ import java.util.concurrent.TimeUnit;
 
 public class TimerController {
 
-    // ── UI ───────────────────────────────────────────────────────────
-    @FXML private Canvas       progressCanvas;
-    @FXML private Button       startPauseBtn;
-    @FXML private Button       stopMusicBtn;
-    @FXML private Label        timerStatusLabel;
-    @FXML private Label        selectedTuneLabel;
-    @FXML private HBox         adjRow;          // fine-adjust row (custom only)
+    // ── FXML ──
+    @FXML private HBox   presetsRow;
+    @FXML private Canvas progressCanvas;
+    @FXML private Button startPauseBtn;
+    @FXML private Label  timerStatusLabel;
+    @FXML private Label  selectedTuneLabel;
+    @FXML private VBox   soundPickerPanel;
+    @FXML private ListView<TuneManager.Tune> tuneListView;
 
-    // Preset toggle buttons
-    @FXML private ToggleButton preset5Btn;
-    @FXML private ToggleButton preset10Btn;
-    @FXML private ToggleButton preset15Btn;
+    // ── Preset model ──
+    private static class Preset {
+        final String label;
+        final int    seconds;
+        final boolean isCustom;
 
-    // ── Timer state ──────────────────────────────────────────────────
-    private int     remainingSeconds = 5 * 60;   // default: 5 min preset
+        Preset(String label, int seconds, boolean isCustom) {
+            this.label    = label;
+            this.seconds  = seconds;
+            this.isCustom = isCustom;
+        }
+    }
+
+    private final List<Preset> presets = new ArrayList<>();
+    private Preset activePreset = null;
+
+    // ── Timer state ──
+    private int     remainingSeconds = 5 * 60;
     private int     totalSeconds     = 5 * 60;
     private boolean running          = false;
-
-    /**
-     * activePreset holds the preset's duration in seconds when a preset
-     * is selected (300 / 600 / 900), or -1 for a custom timer.
-     */
-    private int activePreset = 300;
+    private boolean soundPlaying     = false;
 
     private ScheduledExecutorService scheduler;
     private ScheduledFuture<?>        tickFuture;
 
-    // ── Sound state ──────────────────────────────────────────────────
+    // ── Sound ──
     private TuneManager.Tune selectedTune = null;
     private final ObservableList<TuneManager.Tune> tunes =
             FXCollections.observableArrayList();
 
-    // ── Initialize ───────────────────────────────────────────────────
+    // ─── Initialize ──────────────────────────────────────────────────
 
     @FXML
     public void initialize() {
@@ -71,154 +79,175 @@ public class TimerController {
             return t;
         });
 
+        // Default presets
+        presets.add(new Preset("5 min",  5  * 60, false));
+        presets.add(new Preset("10 min", 10 * 60, false));
+        presets.add(new Preset("15 min", 15 * 60, false));
+
+        // Sound
         tunes.setAll(TuneManager.loadAll());
-        if (!tunes.isEmpty()) selectTune(tunes.get(0));
+        tuneListView.setItems(tunes);
+        tuneListView.getSelectionModel()
+            .selectedItemProperty()
+            .addListener((obs, o, n) -> { if (n != null) selectTune(n); });
+        tuneListView.getSelectionModel().selectFirst();
 
-        // Reflect initial selection (5 min) in the UI
-        syncPresetButtons();
-        syncAdjRow();
-        drawProgress();
+        // Build preset UI
+        buildPresetRow();
+
+        // Select first preset by default
+        selectPreset(presets.get(0));
     }
 
-    // ── Preset handlers ──────────────────────────────────────────────
+    // ─── Preset row builder ───────────────────────────────────────────
 
-    @FXML private void handlePreset5()  { applyPreset(300); }
-    @FXML private void handlePreset10() { applyPreset(600); }
-    @FXML private void handlePreset15() { applyPreset(900); }
+    private void buildPresetRow() {
+        // Clear everything except the + button (always last)
+        presetsRow.getChildren().clear();
 
-    private void applyPreset(int seconds) {
-        if (running) return;            // ignore while countdown is live
-        activePreset     = seconds;
-        remainingSeconds = seconds;
-        totalSeconds     = seconds;
+        for (Preset preset : presets) {
+            presetsRow.getChildren().add(makePresetButton(preset));
+        }
+
+        // + Add button always at the end
+        Button addBtn = new Button("+");
+        addBtn.getStyleClass().add("add-preset-btn");
+        addBtn.setPrefWidth(64);
+        addBtn.setPrefHeight(64);
+        addBtn.setOnAction(e -> handleAddPreset());
+        presetsRow.getChildren().add(addBtn);
+    }
+
+    private Button makePresetButton(Preset preset) {
+        // Two-line button: "5\nmin" or "20\nCustom"
+        int    mins  = preset.seconds / 60;
+        int    secs  = preset.seconds % 60;
+        String top   = secs == 0
+                ? String.valueOf(mins)
+                : String.format("%d:%02d", mins, secs);
+        String sub   = preset.isCustom ? "Custom" : "min";
+
+        Label topLbl = new Label(top);
+        topLbl.getStyleClass().add("preset-time-lbl");
+
+        Label subLbl = new Label(sub);
+        subLbl.getStyleClass().add("preset-sub-lbl");
+
+        VBox box = new VBox(2, topLbl, subLbl);
+        box.setAlignment(Pos.CENTER);
+
+        Button btn = new Button();
+        btn.setGraphic(box);
+        btn.getStyleClass().add("preset-btn");
+        btn.setPrefWidth(64);
+        btn.setPrefHeight(64);
+
+        btn.setOnAction(e -> selectPreset(preset));
+
+        // Context menu to delete custom presets
+        if (preset.isCustom) {
+            ContextMenu menu = new ContextMenu();
+            MenuItem del = new MenuItem("Remove preset");
+            del.setOnAction(e -> {
+                presets.remove(preset);
+                buildPresetRow();
+                if (activePreset == preset) {
+                    selectPreset(presets.get(0));
+                }
+            });
+            menu.getItems().add(del);
+            btn.setContextMenu(menu);
+        }
+
+        return btn;
+    }
+
+    private void selectPreset(Preset preset) {
+        if (running) return; // Don't switch while running
+
+        activePreset     = preset;
+        remainingSeconds = preset.seconds;
+        totalSeconds     = preset.seconds;
+        soundPlaying     = false;
+
+        // Update button styles
+        presetsRow.getChildren().forEach(node -> {
+            if (node instanceof Button btn &&
+                    btn.getStyleClass().contains("preset-btn")) {
+                btn.getStyleClass().removeAll("preset-btn-active");
+            }
+        });
+
+        // Find and highlight the active preset button
+        int idx = presets.indexOf(preset);
+        if (idx >= 0 && idx < presetsRow.getChildren().size()) {
+            presetsRow.getChildren().get(idx)
+                    .getStyleClass().add("preset-btn-active");
+        }
+
+        startPauseBtn.setText("▶");
         timerStatusLabel.setText("");
-        startPauseBtn.setText("▶  Start");
-        stopMusicBtn.setDisable(true);
-        syncPresetButtons();
-        syncAdjRow();
         drawProgress();
     }
 
-    // ── Custom timer dialog ──────────────────────────────────────────
+    // ─── Add custom preset ────────────────────────────────────────────
 
     @FXML
-    private void handleAddCustom() {
-        if (running) return;
+    private void handleAddPreset() {
+        // Ask for minutes via a simple dialog
+        TextInputDialog dialog = new TextInputDialog("20");
+        dialog.setTitle("Custom preset");
+        dialog.setHeaderText("Enter duration in minutes");
+        dialog.setContentText("Minutes:");
 
-        Dialog<Integer> dialog = new Dialog<>();
-        dialog.setTitle("Custom timer");
-        dialog.setHeaderText("Set a custom duration");
+        // Style the dialog
+        dialog.getDialogPane().getStylesheets().add(
+                getClass().getResource("/org/example/style.css")
+                          .toExternalForm());
 
-        ButtonType okType = new ButtonType("Set timer", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(okType, ButtonType.CANCEL);
-
-        Spinner<Integer> minSpinner = new Spinner<>(0, 999, 0);
-        Spinner<Integer> secSpinner = new Spinner<>(0,  59, 0);
-        minSpinner.setEditable(true);
-        minSpinner.setPrefWidth(80);
-        secSpinner.setEditable(true);
-        secSpinner.setPrefWidth(80);
-
-        HBox row = new HBox(8,
-                new Label("Minutes:"), minSpinner,
-                new Label("Seconds:"), secSpinner);
-        row.setAlignment(Pos.CENTER);
-        dialog.getDialogPane().setContent(row);
-
-        dialog.setResultConverter(btn ->
-                btn == okType
-                        ? minSpinner.getValue() * 60 + secSpinner.getValue()
-                        : null);
-
-        Optional<Integer> result = dialog.showAndWait();
-        result.ifPresent(total -> {
-            if (total <= 0) return;
-            activePreset     = -1;          // marks as custom
-            remainingSeconds = total;
-            totalSeconds     = total;
-            timerStatusLabel.setText("");
-            startPauseBtn.setText("▶  Start");
-            stopMusicBtn.setDisable(true);
-            syncPresetButtons();
-            syncAdjRow();
-            drawProgress();
+        dialog.showAndWait().ifPresent(input -> {
+            try {
+                int mins = Integer.parseInt(input.trim());
+                if (mins <= 0 || mins > 999) {
+                    showError("Enter a number between 1 and 999.");
+                    return;
+                }
+                Preset custom = new Preset(mins + " min",
+                        mins * 60, true);
+                presets.add(custom);
+                buildPresetRow();
+                selectPreset(custom);
+            } catch (NumberFormatException e) {
+                showError("Please enter a valid number.");
+            }
         });
     }
 
-    // ── UI sync helpers ──────────────────────────────────────────────
-
-    /** Keep the three toggle buttons in sync with activePreset. */
-    private void syncPresetButtons() {
-        preset5Btn.setSelected(activePreset == 300);
-        preset10Btn.setSelected(activePreset == 600);
-        preset15Btn.setSelected(activePreset == 900);
+    private void showError(String msg) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        alert.showAndWait();
     }
 
-    /**
-     * Fine-adjustment row is shown (and takes layout space) only when
-     * a custom duration is active, so preset users don't see clutter.
-     */
-    private void syncAdjRow() {
-        boolean custom = (activePreset == -1);
-        adjRow.setVisible(custom);
-        adjRow.setManaged(custom);
-    }
-
-    // ── Tune selection ───────────────────────────────────────────────
-
-    private void selectTune(TuneManager.Tune tune) {
-        selectedTune = tune;
-        if (selectedTuneLabel != null)
-            selectedTuneLabel.setText(tune.getName());
-    }
-
-    // ── Sound picker popup ───────────────────────────────────────────
-
-    @FXML
-    private void handleOpenSoundPicker() {
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/org/example/sound_picker.fxml"));
-            Parent root = loader.load();
-
-            SoundPickerController controller = loader.getController();
-            controller.init(tunes, selectedTune);
-
-            Stage popup = new Stage();
-            popup.setTitle("Choose sound");
-            popup.setScene(new Scene(root));
-            popup.setResizable(false);
-            popup.initModality(Modality.WINDOW_MODAL);
-            popup.initOwner(selectedTuneLabel.getScene().getWindow());
-
-            popup.setOnHidden(e -> {
-                SoundEngine.stopCurrent();
-                TuneManager.Tune picked = controller.getSelectedTune();
-                if (picked != null) selectTune(picked);
-            });
-
-            popup.showAndWait();
-
-        } catch (Exception e) {
-            System.err.println("Failed to open sound picker: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    // ── Timer controls ───────────────────────────────────────────────
+    // ─── Timer controls ──────────────────────────────────────────────
 
     @FXML
     private void handleStartPause() {
-        if (running) pauseTimer();
-        else         startTimer();
+        if (soundPlaying) return; // Don't start while sound is playing
+
+        if (running) {
+            pauseTimer();
+        } else {
+            startTimer();
+        }
     }
 
     private void startTimer() {
         if (remainingSeconds <= 0) return;
 
-        totalSeconds = remainingSeconds;     // lock ring baseline
-        running      = true;
-        startPauseBtn.setText("⏸  Pause");
+        running = true;
+        startPauseBtn.setText("⏸");
         timerStatusLabel.setText("");
 
         tickFuture = scheduler.scheduleAtFixedRate(() -> {
@@ -226,11 +255,12 @@ public class TimerController {
                 remainingSeconds--;
                 Platform.runLater(this::drawProgress);
             } else {
+                // Timer finished
                 Platform.runLater(() -> {
-                    running = false;
-                    startPauseBtn.setText("▶  Start");
-                    timerStatusLabel.setText("Time's up!");
-                    stopMusicBtn.setDisable(false);  // let user silence alarm
+                    running      = false;
+                    soundPlaying = true;
+                    startPauseBtn.setText("▶");
+                    timerStatusLabel.setText("Time's up! Press Stop to dismiss.");
                     SoundEngine.play(selectedTune);
                     drawProgress();
                 });
@@ -242,101 +272,169 @@ public class TimerController {
     private void pauseTimer() {
         running = false;
         if (tickFuture != null) tickFuture.cancel(false);
-        startPauseBtn.setText("▶  Resume");
+        startPauseBtn.setText("▶");
         timerStatusLabel.setText("Paused");
         drawProgress();
     }
 
-    /**
-     * Reset behaviour:
-     *   • Preset timer  → restores to that preset's duration (300 / 600 / 900 s)
-     *   • Custom timer  → resets to 0 (user must re-enter a duration)
-     */
+    // Stop button — stops sound if playing, otherwise acts as pause
     @FXML
-    private void handleReset() {
-        pauseTimer();
-        SoundEngine.stopCurrent();
-        stopMusicBtn.setDisable(true);
-        timerStatusLabel.setText("");
-        startPauseBtn.setText("▶  Start");
-
-        if (activePreset > 0) {
-            remainingSeconds = activePreset;
-            totalSeconds     = activePreset;
+    private void handleStop() {
+        if (soundPlaying) {
+            // Timer finished and sound is playing — stop the sound
+            SoundEngine.stopCurrent();
+            soundPlaying = false;
+            timerStatusLabel.setText("Stopped.");
         } else {
-            remainingSeconds = 0;
-            totalSeconds     = 0;
+            // Timer still running — stop and reset
+            pauseTimer();
+            SoundEngine.stopCurrent();
+            timerStatusLabel.setText("Stopped.");
         }
         drawProgress();
     }
 
-    /** Silences the alarm that fires when the countdown reaches zero. */
+    // Reset — goes back to preset duration (or 0 for custom if removed)
     @FXML
-    private void handleStopMusic() {
+    private void handleReset() {
+        if (running) pauseTimer();
         SoundEngine.stopCurrent();
-        stopMusicBtn.setDisable(true);
+        soundPlaying = false;
+
+        if (activePreset != null) {
+            remainingSeconds = activePreset.seconds;
+            totalSeconds     = activePreset.seconds;
+        } else {
+            remainingSeconds = 0;
+            totalSeconds     = 0;
+        }
+
+        startPauseBtn.setText("▶");
         timerStatusLabel.setText("");
-    }
-
-    // ── Fine-adjustment (custom timers only) ─────────────────────────
-
-    @FXML private void handlePlusMin()  { adjustTime(+60); }
-    @FXML private void handleMinusMin() { adjustTime(-60); }
-    @FXML private void handlePlusSec()  { adjustTime(+10); }
-    @FXML private void handleMinusSec() { adjustTime(-10); }
-
-    private void adjustTime(int delta) {
-        if (running) return;
-        remainingSeconds = Math.max(0, remainingSeconds + delta);
-        totalSeconds     = remainingSeconds;
         drawProgress();
     }
 
-    // ── Progress ring drawing ─────────────────────────────────────────
+    // ─── Progress ring ────────────────────────────────────────────────
 
     private void drawProgress() {
         GraphicsContext gc = progressCanvas.getGraphicsContext2D();
         double w  = progressCanvas.getWidth();
         double h  = progressCanvas.getHeight();
-        double cx = w / 2, cy = h / 2;
+        double cx = w / 2;
+        double cy = h / 2;
         double r  = Math.min(w, h) / 2 - 14;
 
         gc.clearRect(0, 0, w, h);
 
-        // Track ring (muted sage)
+        // Background ring
         gc.setStroke(Color.web("#e8f4f1"));
         gc.setLineWidth(10);
         gc.setLineCap(StrokeLineCap.ROUND);
         gc.strokeOval(cx - r, cy - r, r * 2, r * 2);
 
-        // Progress arc (shrinks as time elapses)
+        // Progress arc
         double progress = totalSeconds > 0
                 ? (double) remainingSeconds / totalSeconds : 0;
+
         if (progress > 0) {
-            gc.setStroke(Color.web("#4a7c6f"));
+            gc.setStroke(soundPlaying
+                    ? Color.web("#c0392b")   // red when time's up
+                    : Color.web("#4a7c6f")); // sage when running
             gc.setLineWidth(10);
             gc.setLineCap(StrokeLineCap.ROUND);
-            gc.strokeArc(cx - r, cy - r, r * 2, r * 2,
-                    90, progress * 360, ArcType.OPEN);
+            gc.strokeArc(
+                    cx - r, cy - r, r * 2, r * 2,
+                    90, progress * 360,
+                    ArcType.OPEN);
         }
 
         // Time text
-        int hh = remainingSeconds / 3600;
-        int mm = (remainingSeconds % 3600) / 60;
-        int ss = remainingSeconds % 60;
+        int h2  = remainingSeconds / 3600;
+        int m   = (remainingSeconds % 3600) / 60;
+        int s   = remainingSeconds % 60;
+        String timeStr = h2 > 0
+                ? String.format("%02d:%02d:%02d", h2, m, s)
+                : String.format("%02d:%02d", m, s);
+
         gc.setFill(Color.web("#1a1a18"));
-        gc.setFont(Font.font("Segoe UI Light", FontWeight.LIGHT, 28));
+        gc.setFont(Font.font("Segoe UI Light", FontWeight.LIGHT, 30));
         gc.setTextAlign(TextAlignment.CENTER);
-        gc.fillText(String.format("%02d:%02d:%02d", hh, mm, ss), cx, cy + 10);
+        gc.fillText(timeStr, cx, cy + 10);
 
         // Sub-label
+        String sub = soundPlaying ? "time's up"
+                : running        ? "running"
+                : remainingSeconds == 0 ? "done"
+                : "ready";
+
         gc.setFill(Color.web("#9a9a94"));
         gc.setFont(Font.font("Segoe UI", FontWeight.NORMAL, 11));
-        String sub = running ? "remaining" : remainingSeconds == 0 ? "done" : "ready";
         gc.fillText(sub, cx, cy + 28);
     }
 
-    // ── Lifecycle ────────────────────────────────────────────────────
+    // ─── Sound picker ────────────────────────────────────────────────
+
+    @FXML
+    private void handleOpenSoundPicker() {
+        boolean show = !soundPickerPanel.isVisible();
+        soundPickerPanel.setVisible(show);
+        soundPickerPanel.setManaged(show);
+        if (show && selectedTune != null)
+            tuneListView.getSelectionModel().select(selectedTune);
+    }
+
+    @FXML
+    private void handleAddTune() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Select alarm tune");
+        chooser.getExtensionFilters().addAll(
+            new FileChooser.ExtensionFilter("Audio", "*.wav", "*.mp3"),
+            new FileChooser.ExtensionFilter("WAV",   "*.wav"),
+            new FileChooser.ExtensionFilter("MP3",   "*.mp3")
+        );
+        File file = chooser.showOpenDialog(
+                progressCanvas.getScene().getWindow());
+        if (file != null) {
+            String raw  = file.getName();
+            String name = raw.contains(".")
+                    ? raw.substring(0, raw.lastIndexOf('.')) : raw;
+            TuneManager.Tune t =
+                    new TuneManager.Tune(file.getAbsolutePath(), name);
+            boolean exists = tunes.stream()
+                    .anyMatch(x -> x.getId().equals(t.getId()));
+            if (!exists) {
+                tunes.add(t);
+                TuneManager.save(tunes);
+            }
+            tuneListView.getSelectionModel().select(t);
+        }
+    }
+
+    @FXML
+    private void handlePreviewTune() {
+        TuneManager.Tune t =
+                tuneListView.getSelectionModel().getSelectedItem();
+        if (t != null) SoundEngine.play(t);
+    }
+
+    @FXML
+    private void handleRemoveTune() {
+        TuneManager.Tune t =
+                tuneListView.getSelectionModel().getSelectedItem();
+        if (t == null || t.isDefault()) return;
+        tunes.remove(t);
+        TuneManager.save(tunes);
+        if (t.equals(selectedTune)) {
+            tuneListView.getSelectionModel().selectFirst();
+        }
+    }
+
+    private void selectTune(TuneManager.Tune tune) {
+        selectedTune = tune;
+        selectedTuneLabel.setText(tune.getName());
+    }
+
+    // ─── Lifecycle ────────────────────────────────────────────────────
 
     public void shutdown() {
         SoundEngine.stopCurrent();
