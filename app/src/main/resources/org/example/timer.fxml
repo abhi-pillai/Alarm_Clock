@@ -53,35 +53,14 @@
 
     <!-- ── Sound row ── -->
     <VBox styleClass="timer-sound-card" spacing="0">
-
         <HBox styleClass="option-row" alignment="CENTER_LEFT">
             <Label text="Sound" styleClass="option-label"
-                   HBox.hgrow="ALWAYS"/>
+                HBox.hgrow="ALWAYS"/>
             <Label fx:id="selectedTuneLabel" text="Default beep"
-                   styleClass="option-hint"/>
+                styleClass="option-hint"/>
             <Button text="›" onAction="#handleOpenSoundPicker"
                     styleClass="option-chevron"/>
         </HBox>
-
-        <VBox fx:id="soundPickerPanel"
-              visible="false" managed="false"
-              styleClass="sound-panel" spacing="0">
-            <ListView fx:id="tuneListView" prefHeight="140"
-                      styleClass="tune-list"/>
-            <HBox spacing="8" styleClass="sound-actions">
-                <Button text="+ Add tune"
-                        onAction="#handleAddTune"
-                        styleClass="add-tune-btn"
-                        HBox.hgrow="ALWAYS"/>
-                <Button text="▶ Preview"
-                        onAction="#handlePreviewTune"
-                        styleClass="preview-btn"/>
-                <Button text="Remove"
-                        onAction="#handleRemoveTune"
-                        styleClass="remove-tune-btn"/>
-            </HBox>
-        </VBox>
-
     </VBox>
 
     <!-- ── Status ── -->
