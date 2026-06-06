@@ -36,8 +36,8 @@ public class TimerController {
     @FXML private Button startPauseBtn;
     @FXML private Label  timerStatusLabel;
     @FXML private Label  selectedTuneLabel;
-    @FXML private VBox   soundPickerPanel;
-    @FXML private ListView<TuneManager.Tune> tuneListView;
+    // @FXML private VBox   soundPickerPanel;
+    // @FXML private ListView<TuneManager.Tune> tuneListView;
 
     // ── Preset model ──
     private static class Preset {
@@ -86,11 +86,12 @@ public class TimerController {
 
         // Sound
         tunes.setAll(TuneManager.loadAll());
-        tuneListView.setItems(tunes);
-        tuneListView.getSelectionModel()
-            .selectedItemProperty()
-            .addListener((obs, o, n) -> { if (n != null) selectTune(n); });
-        tuneListView.getSelectionModel().selectFirst();
+        // tuneListView.setItems(tunes);
+        // tuneListView.getSelectionModel()
+        //     .selectedItemProperty()
+        //     .addListener((obs, o, n) -> { if (n != null) selectTune(n); });
+        // tuneListView.getSelectionModel().selectFirst();
+        if (!tunes.isEmpty()) selectTune(tunes.get(0));
 
         // Build preset UI
         buildPresetRow();
@@ -122,10 +123,12 @@ public class TimerController {
         // Two-line button: "5\nmin" or "20\nCustom"
         int    mins  = preset.seconds / 60;
         int    secs  = preset.seconds % 60;
-        String top   = secs == 0
+        String top = secs == 0
                 ? String.valueOf(mins)
                 : String.format("%d:%02d", mins, secs);
-        String sub   = preset.isCustom ? "Custom" : "min";
+        String sub = preset.isCustom
+                ? (secs == 0 ? "Custom" : "m·s")
+                : "min";
 
         Label topLbl = new Label(top);
         topLbl.getStyleClass().add("preset-time-lbl");
@@ -194,32 +197,66 @@ public class TimerController {
 
     @FXML
     private void handleAddPreset() {
-        // Ask for minutes via a simple dialog
-        TextInputDialog dialog = new TextInputDialog("20");
-        dialog.setTitle("Custom preset");
-        dialog.setHeaderText("Enter duration in minutes");
-        dialog.setContentText("Minutes:");
-
-        // Style the dialog
-        dialog.getDialogPane().getStylesheets().add(
+        // Ask minutes
+        TextInputDialog minsDialog = new TextInputDialog("0");
+        minsDialog.setTitle("Custom preset");
+        minsDialog.setHeaderText("Enter duration");
+        minsDialog.setContentText("Minutes :");
+        minsDialog.getDialogPane().getStylesheets().add(
                 getClass().getResource("/org/example/style.css")
-                          .toExternalForm());
+                        .toExternalForm());
 
-        dialog.showAndWait().ifPresent(input -> {
+        // Ask seconds only after minutes confirmed
+        minsDialog.showAndWait().ifPresent(minsInput -> {
+            int mins;
             try {
-                int mins = Integer.parseInt(input.trim());
-                if (mins <= 0 || mins > 999) {
-                    showError("Enter a number between 1 and 999.");
+                mins = Integer.parseInt(minsInput.trim());
+                if (mins < 0 || mins > 999) {
+                    showError("Minutes must be between 0 and 999.");
                     return;
                 }
-                Preset custom = new Preset(mins + " min",
-                        mins * 60, true);
+            } catch (NumberFormatException e) {
+                showError("Please enter a valid number for minutes.");
+                return;
+            }
+
+            TextInputDialog secsDialog = new TextInputDialog("0");
+            secsDialog.setTitle("Custom preset");
+            secsDialog.setHeaderText("Enter duration");
+            secsDialog.setContentText("Seconds :");
+            secsDialog.getDialogPane().getStylesheets().add(
+                    getClass().getResource("/org/example/style.css")
+                            .toExternalForm());
+
+            secsDialog.showAndWait().ifPresent(secsInput -> {
+                int secs;
+                try {
+                    secs = Integer.parseInt(secsInput.trim());
+                    if (secs < 0 || secs > 59) {
+                        showError("Seconds must be between 0 and 59.");
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    showError("Please enter a valid number for seconds.");
+                    return;
+                }
+
+                int totalSecs = mins * 60 + secs;
+                if (totalSecs <= 0) {
+                    showError("Duration must be greater than zero.");
+                    return;
+                }
+
+                // Build display label e.g. "5:30" or "20 min"
+                String label = secs == 0
+                        ? mins + " min"
+                        : mins + "m " + secs + "s";
+
+                Preset custom = new Preset(label, totalSecs, true);
                 presets.add(custom);
                 buildPresetRow();
                 selectPreset(custom);
-            } catch (NumberFormatException e) {
-                showError("Please enter a valid number.");
-            }
+            });
         });
     }
 
@@ -376,56 +413,32 @@ public class TimerController {
 
     @FXML
     private void handleOpenSoundPicker() {
-        boolean show = !soundPickerPanel.isVisible();
-        soundPickerPanel.setVisible(show);
-        soundPickerPanel.setManaged(show);
-        if (show && selectedTune != null)
-            tuneListView.getSelectionModel().select(selectedTune);
-    }
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                    getClass().getResource("/org/example/sound_picker.fxml"));
+            javafx.scene.Parent root = loader.load();
+            SoundPickerController ctrl = loader.getController();
+            ctrl.init(tunes, selectedTune);
 
-    @FXML
-    private void handleAddTune() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Select alarm tune");
-        chooser.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter("Audio", "*.wav", "*.mp3"),
-            new FileChooser.ExtensionFilter("WAV",   "*.wav"),
-            new FileChooser.ExtensionFilter("MP3",   "*.mp3")
-        );
-        File file = chooser.showOpenDialog(
-                progressCanvas.getScene().getWindow());
-        if (file != null) {
-            String raw  = file.getName();
-            String name = raw.contains(".")
-                    ? raw.substring(0, raw.lastIndexOf('.')) : raw;
-            TuneManager.Tune t =
-                    new TuneManager.Tune(file.getAbsolutePath(), name);
-            boolean exists = tunes.stream()
-                    .anyMatch(x -> x.getId().equals(t.getId()));
-            if (!exists) {
-                tunes.add(t);
-                TuneManager.save(tunes);
-            }
-            tuneListView.getSelectionModel().select(t);
-        }
-    }
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle("Choose sound");
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.setResizable(false);
+            stage.initModality(javafx.stage.Modality.WINDOW_MODAL);
+            stage.initOwner(progressCanvas.getScene().getWindow());
 
-    @FXML
-    private void handlePreviewTune() {
-        TuneManager.Tune t =
-                tuneListView.getSelectionModel().getSelectedItem();
-        if (t != null) SoundEngine.play(t);
-    }
+            stage.setOnHidden(e -> {
+                SoundEngine.stopCurrent();
+                TuneManager.Tune picked = ctrl.getSelectedTune();
+                if (picked != null) selectTune(picked);
+            });
 
-    @FXML
-    private void handleRemoveTune() {
-        TuneManager.Tune t =
-                tuneListView.getSelectionModel().getSelectedItem();
-        if (t == null || t.isDefault()) return;
-        tunes.remove(t);
-        TuneManager.save(tunes);
-        if (t.equals(selectedTune)) {
-            tuneListView.getSelectionModel().selectFirst();
+            stage.showAndWait();
+
+        } catch (Exception e) {
+            System.err.println("Failed to open sound picker: "
+                    + e.getMessage());
+            e.printStackTrace();
         }
     }
 
