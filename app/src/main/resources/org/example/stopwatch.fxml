@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.StopwatchController"
+      spacing="0"
+      styleClass="tab-content"
+      style="-fx-padding: 16px 14px;">
+
+    <!-- ── Main time display ── -->
+    <VBox alignment="CENTER" spacing="4"
+          style="-fx-padding: 16px 0 8px 0;">
+
+        <HBox alignment="BASELINE_CENTER" spacing="2">
+            <Label fx:id="mainTimeLabel"
+                   text="00:00"
+                   styleClass="sw-main-time"/>
+            <Label fx:id="millisLabel"
+                   text=".00"
+                   styleClass="sw-millis"/>
+        </HBox>
+
+        <Label fx:id="statusLabel"
+               text="ready"
+               styleClass="sw-status"/>
+
+    </VBox>
+
+    <!-- ── Controls ── -->
+    <HBox alignment="CENTER" spacing="14"
+          style="-fx-padding: 12px 0 16px 0;">
+
+        <Button fx:id="resetBtn"
+                text="↺  Reset"
+                onAction="#handleReset"
+                styleClass="timer-ctrl-btn sw-btn-disabled"/>
+
+        <Button fx:id="startStopBtn"
+                text="▶"
+                onAction="#handleStartStop"
+                styleClass="timer-play-btn"/>
+
+        <Button fx:id="lapBtn"
+                text="⊕  Lap"
+                onAction="#handleLap"
+                styleClass="sw-lap-btn sw-btn-disabled"/>
+
+    </HBox>
+
+    <!-- ── Lap list header ── -->
+    <HBox fx:id="lapHeader"
+          styleClass="sw-lap-header"
+          visible="false" managed="false">
+        <Label text="Lap"   prefWidth="80"  styleClass="sw-lap-col-head"/>
+        <Label text="Split" prefWidth="100" styleClass="sw-lap-col-head"
+               HBox.hgrow="ALWAYS"/>
+        <Label text="+/− avg" prefWidth="90"
+               styleClass="sw-lap-col-head sw-lap-col-right"/>
+    </HBox>
+
+    <!-- ── Lap list ── -->
+    <ListView fx:id="lapListView"
+              VBox.vgrow="ALWAYS"
+              styleClass="sw-lap-list">
+        <placeholder>
+            <Label text="No laps yet. Start and press Lap."
+                   styleClass="empty-hint"
+                   style="-fx-padding: 24px;"/>
+        </placeholder>
+    </ListView>
+
+</VBox>
