@@ -1067,3 +1067,124 @@
 .timer-stop-btn:hover {
     -fx-background-color: rgba(192,57,43,0.15);
 }
+
+/* ═══════════════════════════════════════════
+   STOPWATCH
+═══════════════════════════════════════════ */
+.sw-main-time {
+    -fx-font-size: 54px;
+    -fx-font-weight: 300;
+    -fx-font-family: "Segoe UI Light", sans-serif;
+    -fx-text-fill: -text-primary;
+    -fx-letter-spacing: -1px;
+}
+
+.sw-millis {
+    -fx-font-size: 26px;
+    -fx-font-weight: 300;
+    -fx-font-family: "Segoe UI Light", sans-serif;
+    -fx-text-fill: -text-hint;
+}
+
+.sw-status {
+    -fx-font-size: 11px;
+    -fx-text-fill: -text-hint;
+    -fx-alignment: center;
+    -fx-max-width: infinity;
+}
+
+.sw-lap-btn {
+    -fx-background-color: -sage-muted;
+    -fx-text-fill: -sage;
+    -fx-font-size: 12px;
+    -fx-background-radius: 20px;
+    -fx-border-color: -sage-border;
+    -fx-border-radius: 20px;
+    -fx-border-width: 0.5px;
+    -fx-cursor: hand;
+    -fx-padding: 8px 16px;
+}
+
+.sw-lap-btn:hover {
+    -fx-background-color: -sage-border;
+}
+
+.sw-btn-disabled {
+    -fx-opacity: 0.4;
+}
+
+.sw-lap-header {
+    -fx-padding: 6px 4px;
+    -fx-border-color: -border transparent transparent transparent;
+    -fx-border-width: 0.5px 0 0 0;
+}
+
+.sw-lap-col-head {
+    -fx-font-size: 11px;
+    -fx-text-fill: -text-hint;
+    -fx-font-weight: bold;
+}
+
+.sw-lap-col-right {
+    -fx-alignment: center-right;
+}
+
+.sw-lap-list {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.sw-lap-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 2px 0;
+    -fx-border-color: transparent;
+}
+
+.sw-lap-list .list-cell:selected,
+.sw-lap-list .list-cell:focused {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.sw-lap-row {
+    -fx-padding: 8px 4px;
+    -fx-border-color: transparent transparent -border transparent;
+    -fx-border-width: 0 0 0.5px 0;
+}
+
+.sw-lap-row-best {
+    -fx-background-color: -sage-muted;
+    -fx-background-radius: 8px;
+}
+
+.sw-lap-row-worst {
+    -fx-background-color: -danger-light;
+    -fx-background-radius: 8px;
+}
+
+.sw-lap-num {
+    -fx-font-size: 12px;
+    -fx-text-fill: -text-hint;
+}
+
+.sw-lap-split {
+    -fx-font-size: 14px;
+    -fx-font-family: monospace;
+    -fx-font-weight: 500;
+    -fx-text-fill: -text-primary;
+}
+
+.sw-lap-delta {
+    -fx-font-size: 11px;
+    -fx-text-fill: -text-hint;
+    -fx-alignment: center-right;
+}
+
+.sw-col-best {
+    -fx-text-fill: -sage;
+}
+
+.sw-col-worst {
+    -fx-text-fill: -danger;
+}
