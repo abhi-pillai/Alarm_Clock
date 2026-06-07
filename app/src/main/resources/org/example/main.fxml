@@ -2,6 +2,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.fxml.FXMLLoader?>
 
+
 <TabPane xmlns:fx="http://javafx.com/fxml"
          fx:controller="org.example.MainController"
          stylesheets="@style.css"
@@ -10,19 +11,16 @@
 
     <tabs>
         <Tab text="🕐  Clock">
-            <content>
-                <fx:include source="clock.fxml"/>
-            </content>
+            <content><fx:include source="clock.fxml"/></content>
         </Tab>
         <Tab text="⏰  Alarm">
-            <content>
-                <fx:include source="alarm.fxml"/>
-            </content>
+            <content><fx:include source="alarm.fxml"/></content>
         </Tab>
         <Tab text="⏱  Timer">
-            <content>
-                <fx:include source="timer.fxml"/>
-            </content>
+            <content><fx:include source="timer.fxml"/></content>
+        </Tab>
+        <Tab text="⏱  StopWatch">
+            <content><fx:include source="stopwatch.fxml"/></content>
         </Tab>
     </tabs>
 
