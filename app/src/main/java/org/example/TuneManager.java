@@ -8,8 +8,11 @@ import java.util.List;
 public class TuneManager {
 
     // Stored alongside alarms in the same folder
-    private static final Path TUNES_FILE = Paths.get(
-            System.getProperty("user.home"), ".alarmclock", "tunes.txt");
+    private static Path TUNES_FILE = Paths.get(
+        System.getProperty("user.home"), ".alarmclock", "tunes.txt");
+
+    // Package-private — used by tests only
+    static void setTunesFile(Path path) { TUNES_FILE = path; }
 
     // Represents one entry in the sound list
     public static class Tune {
