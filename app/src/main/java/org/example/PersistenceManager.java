@@ -8,8 +8,11 @@ import java.util.List;
 
 public class PersistenceManager {
 
-    private static final Path SAVE_FILE = Paths.get(
-            System.getProperty("user.home"), ".alarmclock", "alarms.txt");
+    private static Path SAVE_FILE = Paths.get(
+        System.getProperty("user.home"), ".alarmclock", "alarms.txt");
+
+    // Package-private — used by tests only to redirect to a temp directory
+    static void setSaveFile(Path path) { SAVE_FILE = path; }
 
     // Format: "HH:mm|label|repeat|tuneId"
     public static void save(List<Alarm> alarms) {
