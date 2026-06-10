@@ -9,8 +9,8 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
+// import javafx.scene.layout.Priority;
+// import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.ArcType;
@@ -18,9 +18,9 @@ import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
-import javafx.stage.FileChooser;
+// import javafx.stage.FileChooser;
 
-import java.io.File;
+// import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -41,12 +41,12 @@ public class TimerController {
 
     // ── Preset model ──
     private static class Preset {
-        final String label;
+        // final String label;
         final int    seconds;
         final boolean isCustom;
 
         Preset(String label, int seconds, boolean isCustom) {
-            this.label    = label;
+            // this.label    = label;
             this.seconds  = seconds;
             this.isCustom = isCustom;
         }
