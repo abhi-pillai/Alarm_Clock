@@ -1,48 +1,128 @@
-
+/*
+ * TrackIt — build.gradle
+ * Produces:
+ *   • A fat/shadow JAR  (./gradlew shadowJar)
+ *   • A native installer bundled with JRE  (./gradlew jpackage)
+ */
 
 plugins {
-    // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
-    id 'org.openjfx.javafxplugin' version '0.1.0'
+    // Shadow: bundles all dependencies into one fat JAR
     id 'com.gradleup.shadow' version '8.3.5'
 }
 
 repositories {
-    // Use Maven Central for resolving dependencies.
     mavenCentral()
 }
 
 dependencies {
-    implementation 'com.googlecode.soundlibs:mp3spi:1.9.5.4'   // MP3 → Java Sound bridge
-    implementation 'com.googlecode.soundlibs:tritonus-share:0.3.7.4' // required by mp3spi
-    implementation 'com.googlecode.soundlibs:jlayer:1.0.1.4'   // MP3 decoder engine
-
-
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation libs.guava
+    implementation 'com.opencsv:opencsv:5.9'
+    implementation 'com.github.librepdf:openpdf:1.3.30'
+    implementation 'com.itextpdf:itextpdf:5.5.13.3'
 }
 
-// Apply a specific Java toolchain to ease working on different environments.
+sourceSets {
+    main {
+        resources {
+            srcDirs = ['src/main/resources']
+        }
+    }
+}
+
+testing {
+    suites {
+        test {
+            useJUnitJupiter('5.12.1')
+        }
+    }
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
 }
-// JavaFX configuration 
-javafx {
-    version = "21"
 
-    modules = [
-        'javafx.controls',   // Buttons, Labels, TextFields, etc.
-        'javafx.fxml',       // FXML layout files (like XML for UI)
-        'javafx.media',      // Audio playback (for alarm sound)
-        'javafx.base'        // Core JavaFX classes (included by others, but explicit is safe)
-    ]
-}
 application {
-    // Define the main class for the application.
-    mainClass = 'org.example.Launcher'
+    mainClass = 'com.myexpense.expensetracker.Main'
 }
-test {
-    useJUnitPlatform()
+
+// ── Shadow JAR configuration ────────────────────────────────────────────────
+shadowJar {
+    archiveBaseName   = 'TrackIt'
+    archiveVersion    = '1.0.0'
+    archiveClassifier = ''          // no "-all" suffix
+    mergeServiceFiles()             // needed for some libraries (e.g. opencsv)
+}
+
+// Make sure shadowJar is built before jpackage runs
+tasks.named('build').configure {
+    dependsOn shadowJar
+}
+
+// ── jpackage — native installer bundled with JRE ────────────────────────────
+// jpackage ships with JDK 14+; no extra download needed.
+// Run: ./gradlew jpackage
+//
+// Output lives in:  app/build/jpackage/
+//   Windows  → TrackIt-1.0.0.exe  (or .msi if you switch type below)
+//   macOS    → TrackIt-1.0.0.dmg
+//   Linux    → trackit_1.0.0_amd64.deb  (or .rpm)
+// ─────────────────────────────────────────────────────────────────────────────
+tasks.register('jpackage', Exec) {
+    dependsOn shadowJar
+
+    // Resolve the fat JAR path at configuration time
+    def fatJar = shadowJar.archiveFile.get().asFile
+
+    // Detect current OS so we pick the right installer type automatically
+    def os   = System.getProperty('os.name').toLowerCase()
+    def type = os.contains('win')     ? 'exe'
+             : os.contains('mac')     ? 'dmg'
+             : /* linux default */      'deb'
+
+    // Use layout.buildDirectory instead of deprecated buildDir (Gradle 9.x fix)
+    def jpackageOutDir = layout.buildDirectory.dir('dist').get().asFile
+
+    doFirst {
+        // jpackage needs the output dir to NOT already exist
+        if (jpackageOutDir.exists()) jpackageOutDir.deleteDir()
+    }
+
+    commandLine(
+        'jpackage',
+
+        // ── Input & output ──────────────────────────────
+        '--input',            fatJar.parent,
+        '--main-jar',         fatJar.name,
+        '--main-class',       'com.myexpense.expensetracker.Main',
+        '--dest',             jpackageOutDir.absolutePath,
+
+        // ── App identity ────────────────────────────────
+        '--name',             'TrackIt',
+        '--app-version',      '1.0.0',
+        '--description',      'Personal expense tracker',
+        '--vendor',           'TrackIt',
+
+        // ── Installer type (auto-detected above) ────────
+        '--type',             type,
+
+        // ── Windows-only extras (ignored on other OSes) ─
+        // '--win-dir-chooser',          // let user pick install folder
+        // '--win-menu',                 // add Start-Menu shortcut
+        // '--win-shortcut',             // add Desktop shortcut
+
+        // ── macOS-only extras ───────────────────────────
+        // '--mac-package-name', 'TrackIt',
+
+        // ── JVM options passed to the bundled JRE ───────
+        '--java-options',     '-Xmx256m',
+        '--java-options',     '-Dfile.encoding=UTF-8',
+
+        // ── App data dir stays beside the install dir ───
+        // The app writes CSV files to data/ relative to the working dir.
+        // jpackage sets the working dir to the install location by default,
+        // so data/ will be created there automatically — no extra config needed.
+    )
 }
