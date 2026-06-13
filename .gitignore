@@ -8,3 +8,24 @@ build
 .kotlin
 
 bin
+# Build and distribution artifacts
+build/
+dist/
+app/build/
+.gradle/
+
+# IDE files
+.idea/
+*.iml
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Build outputs
+*.exe
+*.dmg
+*.deb
+*.rpm
+*.log
+EOF
