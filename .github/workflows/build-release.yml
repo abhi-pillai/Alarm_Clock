@@ -6,18 +6,6 @@ on:
       - 'v*.*.*'
   workflow_dispatch:
     inputs:
-      build_windows:
-        description: 'Build Windows'
-        required: false
-        default: 'true'
-      build_macos:
-        description: 'Build macOS'
-        required: false
-        default: 'true'
-      build_linux:
-        description: 'Build Linux'
-        required: false
-        default: 'true'
       draft_release:
         description: 'Create as draft'
         required: false
@@ -35,9 +23,6 @@ jobs:
     outputs:
       app_version: ${{ steps.version.outputs.app_version }}
       release_version: ${{ steps.version.outputs.release_version }}
-      build_windows: ${{ steps.matrix.outputs.build_windows }}
-      build_macos: ${{ steps.matrix.outputs.build_macos }}
-      build_linux: ${{ steps.matrix.outputs.build_linux }}
 
     steps:
       - name: Checkout Repository
@@ -64,23 +49,6 @@ jobs:
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v1
 
-      - name: Set Build Matrix
-        id: matrix
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            BUILD_WINDOWS="${{ github.event.inputs.build_windows }}"
-            BUILD_MACOS="${{ github.event.inputs.build_macos }}"
-            BUILD_LINUX="${{ github.event.inputs.build_linux }}"
-          else
-            BUILD_WINDOWS="true"
-            BUILD_MACOS="true"
-            BUILD_LINUX="true"
-          fi
-
-          echo "build_windows=$BUILD_WINDOWS" >> $GITHUB_OUTPUT
-          echo "build_macos=$BUILD_MACOS" >> $GITHUB_OUTPUT
-          echo "build_linux=$BUILD_LINUX" >> $GITHUB_OUTPUT
-
       - name: Validation Summary
         run: |
           echo "════════════════════════════════════════════"
@@ -88,19 +56,12 @@ jobs:
           echo "════════════════════════════════════════════"
           echo "Release version: ${{ steps.version.outputs.release_version }}"
           echo "jpackage app version: ${{ steps.version.outputs.app_version }}"
-          echo "Windows Build: ${{ steps.matrix.outputs.build_windows }}"
-          echo "macOS Build: ${{ steps.matrix.outputs.build_macos }}"
-          echo "Linux Build: ${{ steps.matrix.outputs.build_linux }}"
           echo "════════════════════════════════════════════"
 
   build:
     name: 📦 Build (${{ matrix.display_name }})
     needs: validate
     runs-on: ${{ matrix.os }}
-    if: |
-      (matrix.platform == 'windows' && needs.validate.outputs.build_windows == 'true') ||
-      (matrix.platform == 'linux'   && needs.validate.outputs.build_linux   == 'true') ||
-      (matrix.platform == 'macos'   && needs.validate.outputs.build_macos   == 'true')
 
     strategy:
       fail-fast: false
