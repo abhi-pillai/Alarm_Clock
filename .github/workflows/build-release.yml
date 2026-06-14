@@ -1,4 +1,4 @@
-name: Build All Platforms & Release
+name: Build Native Installers
 
 on:
   push:
@@ -31,13 +31,14 @@ jobs:
   validate:
     name: Validate Repository
     runs-on: ubuntu-latest
-    
+
     outputs:
-      version: ${{ steps.version.outputs.version }}
+      app_version: ${{ steps.version.outputs.app_version }}
+      release_version: ${{ steps.version.outputs.release_version }}
       build_windows: ${{ steps.matrix.outputs.build_windows }}
       build_macos: ${{ steps.matrix.outputs.build_macos }}
       build_linux: ${{ steps.matrix.outputs.build_linux }}
-    
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -48,12 +49,17 @@ jobs:
         id: version
         run: |
           if [[ $GITHUB_REF =~ refs/tags/v(.+) ]]; then
-            VERSION="${BASH_REMATCH[1]}"
+            RELEASE_VERSION="${BASH_REMATCH[1]}"
+            # jpackage --app-version only accepts dotted numeric versions (e.g. 1.0.5),
+            # so strip any pre-release/build suffix like "-beta1" if present.
+            APP_VERSION=$(echo "$RELEASE_VERSION" | sed -E 's/[-+].*$//')
           else
-            VERSION="1.0.0-dev-${GITHUB_SHA:0:7}"
+            RELEASE_VERSION="1.0.0-dev-${GITHUB_SHA:0:7}"
+            APP_VERSION="1.0.0"
           fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "📌 Version: $VERSION"
+          echo "app_version=$APP_VERSION" >> $GITHUB_OUTPUT
+          echo "release_version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
+          echo "📌 Release version: $RELEASE_VERSION (jpackage app version: $APP_VERSION)"
 
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v1
@@ -70,7 +76,7 @@ jobs:
             BUILD_MACOS="true"
             BUILD_LINUX="true"
           fi
-          
+
           echo "build_windows=$BUILD_WINDOWS" >> $GITHUB_OUTPUT
           echo "build_macos=$BUILD_MACOS" >> $GITHUB_OUTPUT
           echo "build_linux=$BUILD_LINUX" >> $GITHUB_OUTPUT
@@ -80,21 +86,44 @@ jobs:
           echo "════════════════════════════════════════════"
           echo "✅ Repository Validation Successful"
           echo "════════════════════════════════════════════"
-          echo "Version: ${{ steps.version.outputs.version }}"
+          echo "Release version: ${{ steps.version.outputs.release_version }}"
+          echo "jpackage app version: ${{ steps.version.outputs.app_version }}"
           echo "Windows Build: ${{ steps.matrix.outputs.build_windows }}"
           echo "macOS Build: ${{ steps.matrix.outputs.build_macos }}"
           echo "Linux Build: ${{ steps.matrix.outputs.build_linux }}"
           echo "════════════════════════════════════════════"
 
-  build-windows:
-    name: 🪟 Build Windows EXE
-    runs-on: windows-latest
+  build:
+    name: 📦 Build (${{ matrix.display_name }})
     needs: validate
-    if: ${{ needs.validate.outputs.build_windows == 'true' }}
-    
-    outputs:
-      exe_filename: ${{ steps.package.outputs.exe_filename }}
-    
+    runs-on: ${{ matrix.os }}
+    if: |
+      (matrix.platform == 'windows' && needs.validate.outputs.build_windows == 'true') ||
+      (matrix.platform == 'linux'   && needs.validate.outputs.build_linux   == 'true') ||
+      (matrix.platform == 'macos'   && needs.validate.outputs.build_macos   == 'true')
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            display_name: Windows (MSI)
+            artifact_name: AlarmClock-Windows
+            artifact_glob: app/build/jpackage/*.msi
+
+          - os: ubuntu-latest
+            platform: linux
+            display_name: Linux (DEB)
+            artifact_name: AlarmClock-Linux
+            artifact_glob: app/build/jpackage/*.deb
+
+          - os: macos-latest
+            platform: macos
+            display_name: macOS (DMG)
+            artifact_name: AlarmClock-macOS
+            artifact_glob: app/build/jpackage/*.dmg
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -106,327 +135,92 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Build JAR
-        run: |
-          echo "🔨 Building JAR..."
-          .\gradlew.bat clean build -x test
-        shell: powershell
+      - name: Make gradlew executable
+        if: matrix.platform != 'windows'
+        run: chmod +x gradlew
 
-      - name: Run Tests
-        run: .\gradlew.bat test
-        shell: powershell
-        continue-on-error: true
-
-      - name: Create EXE Installer
-        id: package
-        run: |
-          $version = "${{ needs.validate.outputs.version }}"
-          $appName = "Alarm Clock"
-          $outputDir = "build\windows"
-          
-          New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-          
-          Write-Host "🔨 Creating Windows EXE..."
-          
-          jpackage --input app\build\libs `
-            --name $appName `
-            --main-jar app.jar `
-            --main-class org.example.App `
-            --type exe `
-            --app-version $version `
-            --vendor "Alarm Clock Developer" `
-            --description "A lightweight desktop alarm clock application" `
-            --dest $outputDir `
-            --win-shortcut `
-            --win-menu `
-            --win-per-user-install
-          
-          $exeName = "$appName-$version.exe"
-          Write-Host "exe_filename=$exeName" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-          
-          $exePath = Get-ChildItem "$outputDir\*.exe" | Select-Object -First 1
-          if ($exePath) {
-            Move-Item -Path $exePath.FullName -Destination "build\$exeName"
-            Write-Host "✅ EXE created: $exeName"
-          } else {
-            Write-Host "❌ EXE creation failed!"
-            exit 1
-          }
-        shell: powershell
-
-      - name: Upload Windows Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-exe
-          path: build/Alarm Clock-*.exe
-          retention-days: 7
-
-  build-macos:
-    name: 🍎 Build macOS DMG
-    runs-on: macos-latest
-    needs: validate
-    if: ${{ needs.validate.outputs.build_macos == 'true' }}
-    
-    outputs:
-      dmg_filename: ${{ steps.package.outputs.dmg_filename }}
-    
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: Build JAR
-        run: |
-          echo "🔨 Building JAR..."
-          ./gradlew clean build -x test
-
-      - name: Run Tests
-        run: ./gradlew test
-        continue-on-error: true
-
-      - name: Create DMG Installer
-        id: package
-        run: |
-          VERSION="${{ needs.validate.outputs.version }}"
-          APP_NAME="Alarm Clock"
-          OUTPUT_DIR="build/macos"
-          
-          mkdir -p "$OUTPUT_DIR"
-          
-          echo "🔨 Creating macOS DMG..."
-          
-          jpackage \
-            --input app/build/libs \
-            --name "$APP_NAME" \
-            --main-jar app.jar \
-            --main-class org.example.App \
-            --type dmg \
-            --app-version "$VERSION" \
-            --vendor "Alarm Clock Developer" \
-            --description "A lightweight desktop alarm clock application" \
-            --mac-package-name AlarmClock \
-            --mac-package-identifier com.alarmclock.app \
-            --dest "$OUTPUT_DIR"
-          
-          DMG_NAME="Alarm Clock-$VERSION.dmg"
-          echo "dmg_filename=$DMG_NAME" >> $GITHUB_OUTPUT
-          
-          DMG_PATH=$(find "$OUTPUT_DIR" -name "*.dmg" | head -1)
-          if [ -f "$DMG_PATH" ]; then
-            mv "$DMG_PATH" "build/$DMG_NAME"
-            echo "✅ DMG created: $DMG_NAME"
-          else
-            echo "❌ DMG creation failed!"
-            exit 1
-          fi
-
-      - name: Upload macOS Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-dmg
-          path: build/Alarm Clock-*.dmg
-          retention-days: 7
-
-  build-linux:
-    name: 🐧 Build Linux DEB
-    runs-on: ubuntu-latest
-    needs: validate
-    if: ${{ needs.validate.outputs.build_linux == 'true' }}
-    
-    outputs:
-      deb_filename: ${{ steps.package.outputs.deb_filename }}
-      rpm_filename: ${{ steps.package.outputs.rpm_filename }}
-    
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Install Dependencies
+      - name: Install Linux packaging dependencies
+        if: matrix.platform == 'linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential fakeroot binutils libffi-dev
-
-      - name: Setup JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: Build JAR
-        run: |
-          echo "🔨 Building JAR..."
-          ./gradlew clean build -x test
+          sudo apt-get install -y fakeroot binutils
 
       - name: Run Tests
-        run: ./gradlew test
+        if: matrix.platform != 'windows'
+        run: ./gradlew test --no-daemon
         continue-on-error: true
 
-      - name: Create DEB Package
-        id: package
-        run: |
-          VERSION="${{ needs.validate.outputs.version }}"
-          APP_NAME="alarm-clock"
-          OUTPUT_DIR="build/linux"
-          
-          mkdir -p "$OUTPUT_DIR"
-          
-          echo "🔨 Creating Linux DEB..."
-          
-          jpackage \
-            --input app/build/libs \
-            --name "$APP_NAME" \
-            --main-jar app.jar \
-            --main-class org.example.App \
-            --type deb \
-            --app-version "$VERSION" \
-            --vendor "Alarm Clock Developer" \
-            --description "A lightweight desktop alarm clock application" \
-            --linux-package-name "$APP_NAME" \
-            --linux-deb-maintainer "your-email@example.com" \
-            --linux-app-category "Utility" \
-            --dest "$OUTPUT_DIR"
-          
-          DEB_NAME="alarm-clock_${VERSION}-1_amd64.deb"
-          echo "deb_filename=$DEB_NAME" >> $GITHUB_OUTPUT
-          
-          DEB_PATH=$(find "$OUTPUT_DIR" -name "*.deb" | head -1)
-          if [ -f "$DEB_PATH" ]; then
-            mv "$DEB_PATH" "build/$DEB_NAME"
-            echo "✅ DEB created: $DEB_NAME"
-          else
-            echo "❌ DEB creation failed!"
-            exit 1
-          fi
-
-      - name: Create RPM Package (Optional)
-        id: rpm
+      - name: Run Tests (Windows)
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: .\gradlew.bat test --no-daemon
         continue-on-error: true
-        run: |
-          VERSION="${{ needs.validate.outputs.version }}"
-          APP_NAME="alarm-clock"
-          OUTPUT_DIR="build/linux-rpm"
-          
-          mkdir -p "$OUTPUT_DIR"
-          
-          echo "🔨 Creating Linux RPM..."
-          
-          jpackage \
-            --input app/build/libs \
-            --name "$APP_NAME" \
-            --main-jar app.jar \
-            --main-class org.example.App \
-            --type rpm \
-            --app-version "$VERSION" \
-            --vendor "Alarm Clock Developer" \
-            --description "A lightweight desktop alarm clock application" \
-            --linux-package-name "$APP_NAME" \
-            --linux-rpm-maintainer "your-email@example.com" \
-            --linux-app-category "Utility" \
-            --dest "$OUTPUT_DIR"
-          
-          RPM_NAME="alarm-clock-${VERSION}-1.x86_64.rpm"
-          echo "rpm_filename=$RPM_NAME" >> $GITHUB_OUTPUT
-          
-          RPM_PATH=$(find "$OUTPUT_DIR" -name "*.rpm" | head -1)
-          if [ -f "$RPM_PATH" ]; then
-            mv "$RPM_PATH" "build/$RPM_NAME"
-            echo "✅ RPM created: $RPM_NAME"
-          fi
 
-      - name: Upload Linux Artifacts
+      - name: Build Native Installer
+        if: matrix.platform != 'windows'
+        run: ./gradlew jpackage --no-daemon "-PappVersion=${{ needs.validate.outputs.app_version }}"
+
+      - name: Build Native Installer (Windows)
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: .\gradlew.bat jpackage --no-daemon "-PappVersion=${{ needs.validate.outputs.app_version }}"
+
+      - name: List jpackage output (debug)
+        shell: bash
+        run: ls -la app/build/jpackage/ || true
+
+      - name: Upload Installer Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-packages
-          path: build/*.deb
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_glob }}
           retention-days: 7
-
-      - name: Upload RPM Artifact
-        if: steps.rpm.outcome == 'success'
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-packages-rpm
-          path: build/*.rpm
-          retention-days: 7
+          if-no-files-found: error
 
   create-release:
     name: 📦 Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [validate, build-windows, build-macos, build-linux]
+    needs: [validate, build]
     if: startsWith(github.ref, 'refs/tags/')
-    
+
     permissions:
       contents: write
-    
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Download Windows Artifacts
-        if: ${{ needs.validate.outputs.build_windows == 'true' }}
+      - name: Download All Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: windows-exe
           path: release-artifacts
 
-      - name: Download macOS Artifacts
-        if: ${{ needs.validate.outputs.build_macos == 'true' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: macos-dmg
-          path: release-artifacts
-
-      - name: Download Linux Artifacts
-        if: ${{ needs.validate.outputs.build_linux == 'true' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: linux-packages
-          path: release-artifacts
-
-      - name: Download RPM Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: linux-packages-rpm
-          path: release-artifacts
-        continue-on-error: true
+      - name: Flatten artifact directories
+        run: |
+          mkdir -p release-files
+          find release-artifacts -type f -exec mv {} release-files/ \;
+          ls -la release-files
 
       - name: Generate Release Notes
         run: |
           cat > RELEASE_NOTES.md << EOF
-          # Alarm Clock v${{ needs.validate.outputs.version }}
-          
+          # Alarm Clock v${{ needs.validate.outputs.release_version }}
+
           ## 📥 Downloads
-          
+
           ### 🪟 Windows
-          - [Alarm Clock-${{ needs.validate.outputs.version }}.exe](./Alarm%20Clock-${{ needs.validate.outputs.version }}.exe)
-          - Requirements: Windows 10+ (Java 21 included)
-          - Installation: Download and run the installer
-          
+          - \`.msi\` installer — Requirements: Windows 10+ (Java 21 runtime bundled)
+
           ### 🍎 macOS
-          - [Alarm Clock-${{ needs.validate.outputs.version }}.dmg](./Alarm%20Clock-${{ needs.validate.outputs.version }}.dmg)
-          - Requirements: macOS 10.15+ (Java 21 included)
-          - Installation: Open .dmg and drag to Applications
-          
+          - \`.dmg\` installer — Requirements: macOS 10.15+ (Java 21 runtime bundled)
+
           ### 🐧 Linux
-          - [alarm-clock_${{ needs.validate.outputs.version }}-1_amd64.deb](./alarm-clock_${{ needs.validate.outputs.version }}-1_amd64.deb)
-          - [alarm-clock-${{ needs.validate.outputs.version }}-1.x86_64.rpm](./alarm-clock-${{ needs.validate.outputs.version }}-1.x86_64.rpm)
-          
-          #### Ubuntu/Debian
+          - \`.deb\` package — Requirements: Ubuntu 20.04+ / Debian-based distro
+
           \`\`\`bash
-          sudo dpkg -i alarm-clock_${{ needs.validate.outputs.version }}-1_amd64.deb
+          sudo dpkg -i AlarmClock_*.deb
           \`\`\`
-          
-          #### Fedora/RHEL
-          \`\`\`bash
-          sudo dnf install alarm-clock-${{ needs.validate.outputs.version }}-1.x86_64.rpm
-          \`\`\`
-          
+
           ## ✨ Features
           - 🕐 Live Digital Clock
           - ⏰ Multiple Alarms
@@ -435,42 +229,28 @@ jobs:
           - 🔁 Repeat Alarms
           - 💾 Persistent Storage
           - 🖥️ Modern JavaFX UI
-          
-          ## 🔧 What's New
-          See [CHANGELOG.md](./CHANGELOG.md) for detailed changes.
-          
+
           ## 🐛 Troubleshooting
-          
+
           ### Application won't start
           - Ensure Windows 10+, macOS 10.15+, or Ubuntu 20.04+
           - Java 21 is bundled, no separate installation needed
-          
+
           ### No sound
           - Check system audio settings
           - Ensure speakers are not muted
-          
-          ### Installation failed
-          - Try running installer as Administrator (Windows)
-          - Check disk space (at least 100 MB free)
-          
-          ## 📝 License
-          MIT License - See LICENSE file for details
-          
-          ## 🤝 Support
-          - Found a bug? [Report it here](../../issues)
-          - Have a feature request? [Let us know](../../discussions)
-          
+
           ---
-          
+
           **Built with Java 21 + JavaFX 21 + Gradle**
           EOF
-          
+
           cat RELEASE_NOTES.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: release-artifacts/*
+          files: release-files/*
           body_path: RELEASE_NOTES.md
           draft: ${{ github.event.inputs.draft_release || 'false' }}
           prerelease: false
@@ -485,14 +265,7 @@ jobs:
           echo "════════════════════════════════════════════════════════════"
           echo ""
           echo "📌 Release Information:"
-          echo "   Version: ${{ needs.validate.outputs.version }}"
+          echo "   Version: ${{ needs.validate.outputs.release_version }}"
           echo "   Repository: ${{ github.repository }}"
           echo "   Release URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
-          echo ""
-          echo "📦 Built Artifacts:"
-          echo "   🪟 Windows: ${{ needs.build-windows.outputs.exe_filename }}"
-          echo "   🍎 macOS: ${{ needs.build-macos.outputs.dmg_filename }}"
-          echo "   🐧 Linux: ${{ needs.build-linux.outputs.deb_filename }}"
-          echo ""
-          echo "💾 Download: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
           echo "════════════════════════════════════════════════════════════"

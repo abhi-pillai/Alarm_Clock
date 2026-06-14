@@ -47,15 +47,21 @@ jlink {
     imageZip = project.file("${buildDir}/distributions/app-${javafx.platform.classifier}.zip")
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
 
+    // Merge non-modular dependencies (mp3spi, tritonus, jlayer) into one synthetic module
+    forceMerge 'tritonus', 'mp3spi', 'jl'
+    mergedModuleName = 'alarmclock.merged'
+
     launcher {
         name = 'AlarmClock'
     }
 
     jpackage {
-        appVersion = '1.0.0'
+        // Pass -PappVersion=1.2.3 from CI to stamp the installer with the release version.
+        // Falls back to 1.0.0 for local/dev builds.
+        appVersion = (project.findProperty('appVersion') ?: '1.0.0').toString()
 
         if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
-            icon = 'src/main/resources/org/example/icons/icon.ico'
+            icon = 'src/main/resources/org/example/icons/clock.ico'
             installerType = 'msi'
             installerOptions = [
                 '--win-dir-chooser',
@@ -64,10 +70,10 @@ jlink {
                 '--vendor', 'YourName'
             ]
         } else if (org.gradle.internal.os.OperatingSystem.current().isMacOsX()) {
-            icon = 'src/main/resources/org/example/icons/icon.icns'
+            icon = 'src/main/resources/org/example/icons/clock.icns'
             installerType = 'dmg'
         } else {
-            icon = 'src/main/resources/org/example/icons/icon.png'
+            icon = 'src/main/resources/org/example/icons/clock.png'
             installerType = 'deb'
             installerOptions = [
                 '--linux-shortcut',
