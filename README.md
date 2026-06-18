@@ -1,4 +1,4 @@
-# 🕐 Alarm Clock
+# 🕐 Alarm_Clock
 
 ![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk&logoColor=white)
 ![JavaFX](https://img.shields.io/badge/JavaFX-21-blue?style=flat-square&logo=java&logoColor=white)
